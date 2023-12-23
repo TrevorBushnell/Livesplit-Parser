@@ -4,6 +4,8 @@
 
 This Pyton package parses LiveSplit files and parses data within LiveSplit files.
 
+Install this package with `pip install livesplit_parser`
+
 As of the 0.1 release, the only module included is the `LivesplitData` class, which neatly bundles all data inside your LiveSplit file into one object. The attributes are as follows:
 
 * `LivesplitData.num_attempts`: the number of attempts for your run
