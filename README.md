@@ -49,7 +49,7 @@ print('YOUR SPLIT DATA:\n', my_run.split_info_df)
 
 ## TODO Features to Include
 
-- [ ] Inlcude a `StandDev` column in the `split_info_df` that includes the standard deviation of all your attempts for that split
+- [x] Include a `StandDev` column in the `split_info_df` that includes the standard deviation of all your attempts for that split
 - [ ] Plot split time distributions using *violinplots*
 - [ ] Plot runtime distributions with the splits on the x-axis and standard deviation on the y-axis
 - [ ] Plot number of runs that reset between completed runs
