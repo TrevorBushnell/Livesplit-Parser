@@ -117,7 +117,14 @@ class LivesplitData:
         segment_info_df['NumRunsPassed'] = split_count
         segment_info_df['PercentRunsPassed'] = split_percentage
 
-        segment_info_df
+        # compute standard deviation for splits
+        std_splits = []
+
+        for i in segment_info_df.index:
+            std_splits.append(pd.to_timedelta(attempt_info_df[i]).std())
+
+        segment_info_df['StDev'] = std_splits
+        segment_info_df['StDev'] = segment_info_df['StDev'].astype(str).apply(lambda x: str(x).split()[-1])
 
         # compute average splits
         avg_splits = []
@@ -206,6 +213,6 @@ class LivesplitData:
         # clean final dataframe
         segment_info_df.drop(['SplitTimes', 'BestSegmentTime', 'SegmentHistory'], axis=1, inplace=True)
         segment_info_df.rename(columns={'PersonalBest':'PersonalBestSplitTime', 'PersonalBestSplitTime':'PersonalBest'}, inplace=True)
-        segment_info_df = segment_info_df[['PersonalBest', 'PersonalBestSplitTime', 'BestSegment', 'BestSegmentSplitTime', 'Average', 'AverageSplitTime', 'Median', 'MedianSplitTime', 'NumRunsPassed', 'PercentRunsPassed']]
+        segment_info_df = segment_info_df[['PersonalBest', 'PersonalBestSplitTime', 'BestSegment', 'BestSegmentSplitTime', 'StDev', 'Average', 'AverageSplitTime', 'Median', 'MedianSplitTime', 'NumRunsPassed', 'PercentRunsPassed']]
 
         return segment_info_df
