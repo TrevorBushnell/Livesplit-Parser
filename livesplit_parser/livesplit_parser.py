@@ -31,6 +31,8 @@ class LivesplitData:
         attempt_info_df = pd.DataFrame(data['AttemptHistory']['Attempt'])
         attempt_info_df.columns = ['id', 'started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RealTime']
         attempt_info_df['id'] = attempt_info_df['id'].astype(int)
+        attempt_info_df['isStartedSynced'] = attempt_info_df['isStartedSynced'].astype(bool)
+        attempt_info_df['isEndedSynced'] = attempt_info_df['isEndedSynced'].astype(bool)
         attempt_info_df['started'] = pd.to_datetime(attempt_info_df['started'], format='%m/%d/%Y %H:%M:%S')
         attempt_info_df['ended'] = pd.to_datetime(attempt_info_df['ended'], format='%m/%d/%Y %H:%M:%S')
         attempt_info_df.set_index('id', inplace=True)
@@ -40,11 +42,12 @@ class LivesplitData:
 
         for i in attempt_info_df.index:
             if pd.isna(attempt_info_df['RealTime'][i]):
-                run_finished.append('False')
+                run_finished.append(False)
                 attempt_info_df.loc[i, 'RealTime'] = attempt_info_df['ended'][i] - attempt_info_df['started'][i]
             else:
-                run_finished.append('True')
+                run_finished.append(True)
         attempt_info_df['RunCompleted'] = run_finished
+        attempt_info_df['RunCompleted'] = attempt_info_df['RunCompleted'].astype(bool)
         attempt_info_df['RealTime'] = pd.to_timedelta(attempt_info_df['RealTime'])
         attempt_info_df['RealTime'] = attempt_info_df['RealTime'].astype(str).apply(lambda x: str(x).split()[-1])
         # attempt_info_df['RealTime'] = pd.to_timedelta(attempt_info_df['RealTime'])
@@ -75,8 +78,9 @@ class LivesplitData:
                     pass
 
         segment_history_df = segment_history_df.sort_index()
+        segment_history_df = segment_history_df[segment_history_df.index > 0]
 
-        # merge segent history into attempt history dataframe
+        # merge segment history into attempt history dataframe
         attempt_info_df = pd.merge(attempt_info_df, segment_history_df, left_index = True, right_index=True, how='outer')
 
         return attempt_info_df
@@ -216,3 +220,7 @@ class LivesplitData:
         segment_info_df = segment_info_df[['PersonalBest', 'PersonalBestSplitTime', 'BestSegment', 'BestSegmentSplitTime', 'StDev', 'Average', 'AverageSplitTime', 'Median', 'MedianSplitTime', 'NumRunsPassed', 'PercentRunsPassed']]
 
         return segment_info_df
+    
+
+    def __get_completed_run_ids(self):
+        return self.attempt_info_df[self.attempt_info_df['RunCompleted']].index

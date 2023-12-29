@@ -160,6 +160,7 @@ cython_debug/
 #.idea/
 
 sandbox.ipynb
+sandbox.py
 16star_runs.lss
 16star_runs.json
 test.csv
