@@ -1,6 +1,8 @@
 import xmltodict
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 from datetime import datetime, timedelta
 
 class LivesplitData:
@@ -12,9 +14,22 @@ class LivesplitData:
         self.num_completed_attempts = self.__compute_finished_runs_count(xml_dict)
         self.percent_runs_completed = self.num_completed_attempts / self.num_attempts * 100
         self.attempt_info_df = self.__parse_attempt_data(xml_dict)
+        self.attempt_info_df = self.__add_float_seconds_cols(self.attempt_info_df, [val for val in list(self.attempt_info_df.columns) if val not in ['started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RunCompleted']])
         self.split_info_df = self.__parse_segment_data(xml_dict, self.attempt_info_df)
+        self.split_info_df = self.__add_float_seconds_cols(self.split_info_df, ['PersonalBest', 'BestSegment', 'Average', 'Median'])
 
 
+    def plot_completed_runs_heatmap(self):
+        data = self.__get_completed_runs_data()
+        plot_cols = [v for v in data.columns if v not in ['started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RunCompleted', 'RealTime', 'RealTime_Sec'] and 'Sec' in v]
+        print(plot_cols)
+        data = data[plot_cols]
+        hm = sns.heatmap(data=data)
+
+        plt.title('Heatmap of Completed Run Splits')
+        plt.xlabel('Split Name')
+        plt.ylabel('Completed Run ID')
+        plt.show()
     
     ##################### CLASS HELPER FUNCTIONS ##############
     def __compute_finished_runs_count(self, data):
@@ -220,7 +235,33 @@ class LivesplitData:
         segment_info_df = segment_info_df[['PersonalBest', 'PersonalBestSplitTime', 'BestSegment', 'BestSegmentSplitTime', 'StDev', 'Average', 'AverageSplitTime', 'Median', 'MedianSplitTime', 'NumRunsPassed', 'PercentRunsPassed']]
 
         return segment_info_df
-    
+        
+    def __convert_timestr_to_float(self, time_str):
+        # Split the time string into hours, minutes, seconds, and milliseconds
+        hours, minutes, seconds = map(float, time_str.split(':'))
+
+        # Calculate the total number of seconds
+        total_seconds = hours * 3600 + minutes * 60 + seconds
+
+        return total_seconds
+
+    def __add_float_seconds_cols(self, df, col_names):
+        for c in col_names:
+            vals = []
+
+            for i in df.index:
+                if pd.isna(df[c][i]):
+                    vals.append(np.nan)
+                else:
+                    vals.append(self.__convert_timestr_to_float(df[c][i]))
+
+            df[c+'_Sec'] = vals
+            df[c+'_Sec'] = df[c+'_Sec'].astype(float)
+
+        return df
 
     def __get_completed_run_ids(self):
         return self.attempt_info_df[self.attempt_info_df['RunCompleted']].index
+    
+    def __get_completed_runs_data(self):
+        return self.attempt_info_df[self.attempt_info_df['RunCompleted']]
