@@ -10,6 +10,7 @@ class LivesplitData:
         with open(fpath, 'r') as f:
             xml_dict = xmltodict.parse(f.read())['Run']
 
+        self.name = fpath[:-4]
         self.num_attempts = int(xml_dict['AttemptCount'])
         self.num_completed_attempts = self.__compute_finished_runs_count(xml_dict)
         self.percent_runs_completed = self.num_completed_attempts / self.num_attempts * 100
@@ -17,6 +18,18 @@ class LivesplitData:
         self.attempt_info_df = self.__add_float_seconds_cols(self.attempt_info_df, [val for val in list(self.attempt_info_df.columns) if val not in ['started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RunCompleted']])
         self.split_info_df = self.__parse_segment_data(xml_dict, self.attempt_info_df)
         self.split_info_df = self.__add_float_seconds_cols(self.split_info_df, ['PersonalBest', 'BestSegment', 'Average', 'Median'])
+
+    def export_data(self):
+        # Specify the Excel file path
+        excel_file_path = f'{self.name}.xlsx'
+        df1 = self.attempt_info_df[[v for v in self.attempt_info_df.columns if not '_Sec' in v]]
+        df2 = self.split_info_df[['PersonalBest', 'PersonalBestSplitTime', 'BestSegment', 'BestSegmentSplitTime', 'StDev', 'Average', 'AverageSplitTime', 'Median', 'MedianSplitTime', 'NumRunsPassed', 'PercentRunsPassed']]
+
+        # Create a Pandas Excel writer using ExcelWriter
+        with pd.ExcelWriter(excel_file_path, engine='xlsxwriter') as writer:
+            # Write each dataframe to a different sheet
+            df1.to_excel(writer, sheet_name='Sheet1')
+            df2.to_excel(writer, sheet_name='Sheet2')
 
 
     def plot_completed_runs_heatmap(self):
