@@ -22,11 +22,19 @@ class LivesplitData:
     def plot_completed_runs_heatmap(self):
         data = self.__get_completed_runs_data()
         plot_cols = [v for v in data.columns if v not in ['started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RunCompleted', 'RealTime', 'RealTime_Sec'] and 'Sec' in v]
-        print(plot_cols)
         data = data[plot_cols]
-        hm = sns.heatmap(data=data)
+        data.rename(columns={c:c[:-4] for c in data.columns}, inplace=True)
 
-        plt.title('Heatmap of Completed Run Splits')
+        for c in data.columns:
+            avg = self.__convert_timestr_to_float(self.split_info_df['Average'][c])
+
+            for i in data.index:
+                if not pd.isna(data[c][i]):        
+                    data.loc[i, c] = data[c][i] - avg
+
+        hm = sns.heatmap(data=data, linewidths=0.5, linecolor='black')
+
+        plt.title('Heatmap of Completed Run Splits (Compared to Avg)')
         plt.xlabel('Split Name')
         plt.ylabel('Completed Run ID')
         plt.show()
@@ -232,7 +240,8 @@ class LivesplitData:
         # clean final dataframe
         segment_info_df.drop(['SplitTimes', 'BestSegmentTime', 'SegmentHistory'], axis=1, inplace=True)
         segment_info_df.rename(columns={'PersonalBest':'PersonalBestSplitTime', 'PersonalBestSplitTime':'PersonalBest'}, inplace=True)
-        segment_info_df = segment_info_df[['PersonalBest', 'PersonalBestSplitTime', 'BestSegment', 'BestSegmentSplitTime', 'StDev', 'Average', 'AverageSplitTime', 'Median', 'MedianSplitTime', 'NumRunsPassed', 'PercentRunsPassed']]
+        segment_info_df = self.__add_float_seconds_cols(segment_info_df, ['PersonalBest', 'BestSegment', 'StDev', 'Average', 'Median'])
+        segment_info_df = segment_info_df[['PersonalBest', 'PersonalBest_Sec', 'PersonalBestSplitTime', 'BestSegment', 'BestSegment_Sec', 'BestSegmentSplitTime', 'StDev', 'StDev_Sec', 'Average', 'Average_Sec', 'AverageSplitTime', 'Median', 'Median_Sec', 'MedianSplitTime', 'NumRunsPassed', 'PercentRunsPassed']]
 
         return segment_info_df
         
