@@ -1,6 +1,8 @@
 import xmltodict
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 from datetime import datetime, timedelta
 
 class LivesplitData:
@@ -12,9 +14,30 @@ class LivesplitData:
         self.num_completed_attempts = self.__compute_finished_runs_count(xml_dict)
         self.percent_runs_completed = self.num_completed_attempts / self.num_attempts * 100
         self.attempt_info_df = self.__parse_attempt_data(xml_dict)
+        self.attempt_info_df = self.__add_float_seconds_cols(self.attempt_info_df, [val for val in list(self.attempt_info_df.columns) if val not in ['started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RunCompleted']])
         self.split_info_df = self.__parse_segment_data(xml_dict, self.attempt_info_df)
+        self.split_info_df = self.__add_float_seconds_cols(self.split_info_df, ['PersonalBest', 'BestSegment', 'Average', 'Median'])
 
 
+    def plot_completed_runs_heatmap(self):
+        data = self.__get_completed_runs_data()
+        plot_cols = [v for v in data.columns if v not in ['started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RunCompleted', 'RealTime', 'RealTime_Sec'] and 'Sec' in v]
+        data = data[plot_cols]
+        data.rename(columns={c:c[:-4] for c in data.columns}, inplace=True)
+
+        for c in data.columns:
+            avg = self.__convert_timestr_to_float(self.split_info_df['Average'][c])
+
+            for i in data.index:
+                if not pd.isna(data[c][i]):        
+                    data.loc[i, c] = data[c][i] - avg
+
+        hm = sns.heatmap(data=data, linewidths=0.5, linecolor='black')
+
+        plt.title('Heatmap of Completed Run Splits (Compared to Avg)')
+        plt.xlabel('Split Name')
+        plt.ylabel('Completed Run ID')
+        plt.show()
     
     ##################### CLASS HELPER FUNCTIONS ##############
     def __compute_finished_runs_count(self, data):
@@ -217,10 +240,37 @@ class LivesplitData:
         # clean final dataframe
         segment_info_df.drop(['SplitTimes', 'BestSegmentTime', 'SegmentHistory'], axis=1, inplace=True)
         segment_info_df.rename(columns={'PersonalBest':'PersonalBestSplitTime', 'PersonalBestSplitTime':'PersonalBest'}, inplace=True)
-        segment_info_df = segment_info_df[['PersonalBest', 'PersonalBestSplitTime', 'BestSegment', 'BestSegmentSplitTime', 'StDev', 'Average', 'AverageSplitTime', 'Median', 'MedianSplitTime', 'NumRunsPassed', 'PercentRunsPassed']]
+        segment_info_df = self.__add_float_seconds_cols(segment_info_df, ['PersonalBest', 'BestSegment', 'StDev', 'Average', 'Median'])
+        segment_info_df = segment_info_df[['PersonalBest', 'PersonalBest_Sec', 'PersonalBestSplitTime', 'BestSegment', 'BestSegment_Sec', 'BestSegmentSplitTime', 'StDev', 'StDev_Sec', 'Average', 'Average_Sec', 'AverageSplitTime', 'Median', 'Median_Sec', 'MedianSplitTime', 'NumRunsPassed', 'PercentRunsPassed']]
 
         return segment_info_df
-    
+        
+    def __convert_timestr_to_float(self, time_str):
+        # Split the time string into hours, minutes, seconds, and milliseconds
+        hours, minutes, seconds = map(float, time_str.split(':'))
+
+        # Calculate the total number of seconds
+        total_seconds = hours * 3600 + minutes * 60 + seconds
+
+        return total_seconds
+
+    def __add_float_seconds_cols(self, df, col_names):
+        for c in col_names:
+            vals = []
+
+            for i in df.index:
+                if pd.isna(df[c][i]):
+                    vals.append(np.nan)
+                else:
+                    vals.append(self.__convert_timestr_to_float(df[c][i]))
+
+            df[c+'_Sec'] = vals
+            df[c+'_Sec'] = df[c+'_Sec'].astype(float)
+
+        return df
 
     def __get_completed_run_ids(self):
         return self.attempt_info_df[self.attempt_info_df['RunCompleted']].index
+    
+    def __get_completed_runs_data(self):
+        return self.attempt_info_df[self.attempt_info_df['RunCompleted']]
