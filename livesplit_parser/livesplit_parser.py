@@ -19,11 +19,14 @@ class LivesplitData:
         self.split_info_df = self.__add_float_seconds_cols(self.split_info_df, ['PersonalBest', 'BestSegment', 'Average', 'Median'])
 
 
-    def plot_completed_runs_heatmap(self):
+    def plot_completed_runs_heatmap(self, drop_na=True):
         data = self.__get_completed_runs_data()
         plot_cols = [v for v in data.columns if v not in ['started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RunCompleted', 'RealTime', 'RealTime_Sec'] and 'Sec' in v]
         data = data[plot_cols]
         data.rename(columns={c:c[:-4] for c in data.columns}, inplace=True)
+        
+        if not drop_na:
+            data.dropna(inplcae=True)
 
         for c in data.columns:
             avg = self.__convert_timestr_to_float(self.split_info_df['Average'][c])
