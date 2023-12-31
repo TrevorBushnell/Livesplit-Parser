@@ -1,3 +1,4 @@
+import xml.etree.ElementTree as ET
 import xmltodict
 import pandas as pd
 import numpy as np
@@ -7,9 +8,11 @@ from datetime import datetime, timedelta
 
 class LivesplitData:
     def __init__(self, fpath):
-        with open(fpath, 'r') as f:
-            xml_dict = xmltodict.parse(f.read())['Run']
-
+        tree = ET.parse(fpath)
+        xml_data = tree.getroot()
+        xml_str = ET.tostring(xml_data, encoding='utf-8', method='xml')
+        xml_dict = dict(xmltodict.parse(xml_str))['Run']
+        self.name = fpath[:-4]
         self.num_attempts = int(xml_dict['AttemptCount'])
         self.num_completed_attempts = self.__compute_finished_runs_count(xml_dict)
         self.percent_runs_completed = self.num_completed_attempts / self.num_attempts * 100
@@ -17,6 +20,18 @@ class LivesplitData:
         self.attempt_info_df = self.__add_float_seconds_cols(self.attempt_info_df, [val for val in list(self.attempt_info_df.columns) if val not in ['started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RunCompleted']])
         self.split_info_df = self.__parse_segment_data(xml_dict, self.attempt_info_df)
         self.split_info_df = self.__add_float_seconds_cols(self.split_info_df, ['PersonalBest', 'BestSegment', 'Average', 'Median'])
+
+    def export_data(self):
+        # Specify the Excel file path
+        excel_file_path = f'{self.name}.xlsx'
+        df1 = self.attempt_info_df[[v for v in self.attempt_info_df.columns if not '_Sec' in v]]
+        df2 = self.split_info_df[['PersonalBest', 'PersonalBestSplitTime', 'BestSegment', 'BestSegmentSplitTime', 'StDev', 'Average', 'AverageSplitTime', 'Median', 'MedianSplitTime', 'NumRunsPassed', 'PercentRunsPassed']]
+
+        # Create a Pandas Excel writer using ExcelWriter
+        with pd.ExcelWriter(excel_file_path, engine='xlsxwriter') as writer:
+            # Write each dataframe to a different sheet
+            df1.to_excel(writer, sheet_name='Sheet1')
+            df2.to_excel(writer, sheet_name='Sheet2')
 
 
     def plot_completed_runs_heatmap(self, drop_na=True):
@@ -55,6 +70,8 @@ class LivesplitData:
     def __parse_attempt_data(self, data):
         # initial data parsing
         attempt_info_df = pd.DataFrame(data['AttemptHistory']['Attempt'])
+        if 'PauseTime' in attempt_info_df:
+            attempt_info_df.drop(columns=['PauseTime'], inplace=True)
         attempt_info_df.columns = ['id', 'started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RealTime']
         attempt_info_df['id'] = attempt_info_df['id'].astype(int)
         attempt_info_df['isStartedSynced'] = attempt_info_df['isStartedSynced'].astype(bool)
