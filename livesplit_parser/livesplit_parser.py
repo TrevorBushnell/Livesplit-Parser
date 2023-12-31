@@ -1,3 +1,4 @@
+import xml.etree.ElementTree as ET
 import xmltodict
 import pandas as pd
 import numpy as np
@@ -7,9 +8,10 @@ from datetime import datetime, timedelta
 
 class LivesplitData:
     def __init__(self, fpath):
-        with open(fpath, 'r') as f:
-            xml_dict = xmltodict.parse(f.read())['Run']
-
+        tree = ET.parse(fpath)
+        xml_data = tree.getroot()
+        xml_str = ET.tostring(xml_data, encoding='utf-8', method='xml')
+        xml_dict = dict(xmltodict.parse(xml_str))['Run']
         self.name = fpath[:-4]
         self.num_attempts = int(xml_dict['AttemptCount'])
         self.num_completed_attempts = self.__compute_finished_runs_count(xml_dict)
@@ -65,6 +67,8 @@ class LivesplitData:
     def __parse_attempt_data(self, data):
         # initial data parsing
         attempt_info_df = pd.DataFrame(data['AttemptHistory']['Attempt'])
+        if 'PauseTime' in attempt_info_df:
+            attempt_info_df.drop(columns=['PauseTime'], inplace=True)
         attempt_info_df.columns = ['id', 'started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RealTime']
         attempt_info_df['id'] = attempt_info_df['id'].astype(int)
         attempt_info_df['isStartedSynced'] = attempt_info_df['isStartedSynced'].astype(bool)

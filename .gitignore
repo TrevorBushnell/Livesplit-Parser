@@ -161,8 +161,8 @@ cython_debug/
 
 sandbox.ipynb
 sandbox.py
-16star_runs.lss
-16star_runs.json
-16star_runs.xlsx
+*.lss
+*.json
+*.xlsx
 test.csv
 Makefile
