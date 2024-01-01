@@ -30,18 +30,30 @@ class LivesplitData:
         # Create a Pandas Excel writer using ExcelWriter
         with pd.ExcelWriter(excel_file_path, engine='xlsxwriter') as writer:
             # Write each dataframe to a different sheet
-            df1.to_excel(writer, sheet_name='Sheet1')
-            df2.to_excel(writer, sheet_name='Sheet2')
+            df1.to_excel(writer, sheet_name='Attempt Info')
+            df2.to_excel(writer, sheet_name='Splits Info')
 
+    def plot_splits_violin_plot(self, completed_runs=False, drop_na=False):
+        data = self.attempt_info_df[[c for c in self.attempt_info_df.columns if '_Sec' in c and not 'RealTime' in c]]
+        if completed_runs:
+            data = self.__get_completed_runs_data()[[c for c in data.columns if '_Sec' in c and not 'RealTime' in c]]
+        data.rename(columns={c:c[:-4] for c in data.columns}, inplace=True)
+        if drop_na:
+            data.dropna(inplace=True)
+        data = pd.melt(data, var_name='Split Name', value_name='Split Length (Sec)')
+        sns.violinplot(x='Split Name', y='Split Length (Sec)', data=data)
+        plt.xticks(rotation=90)
+        plt.title('Split Time Distributions')
+        plt.show()
 
-    def plot_completed_runs_heatmap(self, drop_na=True):
+    def plot_completed_runs_heatmap(self, drop_na=False):
         data = self.__get_completed_runs_data()
         plot_cols = [v for v in data.columns if v not in ['started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RunCompleted', 'RealTime', 'RealTime_Sec'] and 'Sec' in v]
         data = data[plot_cols]
         data.rename(columns={c:c[:-4] for c in data.columns}, inplace=True)
         
-        if not drop_na:
-            data.dropna(inplcae=True)
+        if drop_na:
+            data.dropna(inplace=True)
 
         for c in data.columns:
             avg = self.__convert_timestr_to_float(self.split_info_df['Average'][c])
