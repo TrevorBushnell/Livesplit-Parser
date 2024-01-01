@@ -46,9 +46,39 @@ class LivesplitData:
         plt.title('Split Time Distributions')
         plt.show()
 
+    def plot_completed_runs_lineplot(self, drop_na=False):
+        data = self.__get_completed_runs_data()
+        plot_cols = [c for c in data.columns if 'Sec' in c and not 'RealTime' in c]
+        data = data[plot_cols]
+        data.rename(columns = {c:c[:-4] for c in data.columns}, inplace=True)
+
+        if drop_na:
+            data.dropna(inplace=True)
+
+        for c in data.columns:
+            avg = self.__convert_timestr_to_float(self.split_info_df['Average'][c])
+
+            for i in data.index:
+                if not pd.isna(data[c][i]):
+                    data.loc[i, c] = data[c][i] - avg
+
+            fig, ax = plt.subplots()
+            for index, row in data.iterrows():
+                if int(index) != self.__get_pb_id():
+                    ax.plot(row.index, row.values, color='grey')
+            
+            if self.__get_pb_id() in data.index:
+                ax.plot(row.index, row.values, color='red', label='Personal Best')
+            data.to_csv('test.csv', index=False)
+            plt.xlabel('Split Name')
+            plt.ylabel('Deviation From Mean (Seconds)')
+            plt.title('Run Time Distributions')
+            plt.legend()
+            plt.show()
+
     def plot_completed_runs_heatmap(self, drop_na=False):
         data = self.__get_completed_runs_data()
-        plot_cols = [v for v in data.columns if v not in ['started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RunCompleted', 'RealTime', 'RealTime_Sec'] and 'Sec' in v]
+        plot_cols = [c for c in data.columns if 'Sec' in c and not 'RealTime' in c]
         data = data[plot_cols]
         data.rename(columns={c:c[:-4] for c in data.columns}, inplace=True)
         
@@ -306,3 +336,6 @@ class LivesplitData:
     
     def __get_completed_runs_data(self):
         return self.attempt_info_df[self.attempt_info_df['RunCompleted']]
+
+    def __get_pb_id(self):
+        return int(self.__get_completed_runs_data()['RealTime'].idxmin())
