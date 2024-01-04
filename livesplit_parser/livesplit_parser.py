@@ -21,6 +21,10 @@ class LivesplitData:
         self.split_info_df = self.__parse_segment_data(xml_dict, self.attempt_info_df)
         self.split_info_df = self.__add_float_seconds_cols(self.split_info_df, ['PersonalBest', 'BestSegment', 'Average', 'Median'])
 
+    def completed_over_time(self):
+        data = self.__get_completed_runs_data()
+        return data
+
     def export_data(self):
         # Specify the Excel file path
         excel_file_path = f'{self.name}.xlsx'
