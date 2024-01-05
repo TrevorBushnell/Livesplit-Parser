@@ -22,8 +22,12 @@ class LivesplitData:
         self.split_info_df = self.__add_float_seconds_cols(self.split_info_df, ['PersonalBest', 'BestSegment', 'Average', 'Median'])
 
     def completed_over_time(self):
-        data = self.__get_completed_runs_data()
-        return data
+        df = self.__get_completed_runs_data()[['ended', 'RealTime']].reset_index(drop= True)
+
+        for i in range(self.num_completed_attempts):
+            i = self.__convert_timestr_to_float(self.split_info_df[i]['RealTime'])
+            
+        sns.lineplot(data= df, x= 'ended', y= 'RealTime')
 
     def export_data(self):
         # Specify the Excel file path
