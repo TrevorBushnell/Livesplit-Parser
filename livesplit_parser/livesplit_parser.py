@@ -23,11 +23,17 @@ class LivesplitData:
 
     def completed_over_time(self):
         df = self.__get_completed_runs_data()[['ended', 'RealTime']].reset_index(drop= True)
+        
+        lis = []
+        lis2 = []
 
         for i in range(self.num_completed_attempts):
-            i = self.__convert_timestr_to_float(self.split_info_df[i]['RealTime'])
-            
-        sns.lineplot(data= df, x= 'ended', y= 'RealTime')
+            lis.append(self.__convert_timestr_to_float(df['RealTime'][i]))
+            lis2.append(df['ended'][i])
+        arr = np.asarray(lis)
+        arr2 = np.asarray(lis2)
+        
+        sns.lineplot(y= arr, x= arr2)
 
     def export_data(self):
         # Specify the Excel file path
