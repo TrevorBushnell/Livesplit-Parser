@@ -46,7 +46,7 @@ class LivesplitData:
         plt.title('Split Time Distributions')
         plt.show()
 
-    def plot_completed_runs_lineplot(self, drop_na=False):
+    def plot_completed_runs_lineplot(self, drop_na=False, scale='seconds'):
         data = self.__get_completed_runs_data()
         plot_cols = [c for c in data.columns if 'Sec' in c and not 'RealTime' in c]
         data = data[plot_cols]
@@ -57,24 +57,29 @@ class LivesplitData:
 
         for c in data.columns:
             avg = self.__convert_timestr_to_float(self.split_info_df['Average'][c])
+            if scale == 'minutes':
+                avg /= 60
 
             for i in data.index:
                 if not pd.isna(data[c][i]):
-                    data.loc[i, c] = data[c][i] - avg
+                    if scale == 'seconds':
+                        data.loc[i, c] = data[c][i] - avg
+                    elif scale == 'minutes':
+                        data.loc[i, c] = (data[c][i]/60) - avg
 
-            fig, ax = plt.subplots()
-            for index, row in data.iterrows():
-                if int(index) != self.__get_pb_id():
-                    ax.plot(row.index, row.values, color='grey')
+        fig, ax = plt.subplots()
+        for index, row in data.iterrows():
+            if int(index) != self.__get_pb_id():
+                ax.plot(row.index, row.values, color='grey')
             
-            if self.__get_pb_id() in data.index:
-                ax.plot(row.index, row.values, color='red', label='Personal Best')
-            data.to_csv('test.csv', index=False)
-            plt.xlabel('Split Name')
-            plt.ylabel('Deviation From Mean (Seconds)')
-            plt.title('Run Time Distributions')
-            plt.legend()
-            plt.show()
+        if self.__get_pb_id() in data.index:
+            ax.plot(row.index, row.values, color='red', label='Personal Best')
+        plt.xlabel('Split Name')
+        plt.xticks(rotation=60)
+        plt.ylabel('Deviation From Mean (Seconds)')
+        plt.title('Run Time Distributions')
+        plt.legend()
+        plt.show()
 
     def plot_completed_runs_heatmap(self, drop_na=False):
         data = self.__get_completed_runs_data()
