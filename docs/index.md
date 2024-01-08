@@ -61,7 +61,7 @@ Writes the data within the Livesplit file to an Excel sheet. The first sheet is 
 Takes the attempt data and plots the number of resets on the y-axis between each completed run whose ID is on the x-axis. This aims to show how reset-prone you were during different times, with lower points indicating less resets.
 
 * `drop_na`: Whether to include rows that have missing data from your plot. The default value is set to `False`.
-* `time_limit`: Determines an upper bound for times included in the plot. Must be in the format 'hh:mm:ss'.
+* `time_limit`: Determines an optional upper bound for times included in the plot. Must be in the format 'hh:mm:ss'. No upper bound by default.
 
 ### `LivesplitData.plot_completed_over_time(only_pbs -> bool, drop_na -> bool, time_limit -> str)`
 
@@ -69,7 +69,7 @@ Graphs completed runs by the date performed. Y-axis shows the length of the run,
 
 * `only_pbs`: Indicates whether to show all completed runs if set to `False`, or only runs that were personal bests at the time if set to `True`. The default value is set to `False`.
 * `drop_na`: Whether to include rows that have missing data from your plot. The default value is set to `False`.
-* `time_limit`: Determines an upper bound for times included in the plot. Must be in the format 'hh:mm:ss'.
+* `time_limit`: Determines an optional upper bound for times included in the plot. Must be in the format 'hh:mm:ss'. No upper bound by default.
 
 ### `LivesplitData.plot_splits_violin_plot(completed_runs -> bool, drop_na -> bool)`
 
