@@ -56,34 +56,56 @@ From here, you can use the other included functions (listed below) to get some p
 
 Writes the data within the Livesplit file to an Excel sheet. The first sheet is the data for each specific attempt, and the second sheet is the info for each of your splits. The name of the sheet will be the name of the split file by default.
 
-### `LivesplitData.plot_num_resets()`
+### `LivesplitData.plot_num_resets(drop_na -> bool, time_limit -> str, plot -> bool)`
 
 Takes the attempt data and plots the number of resets on the y-axis between each completed run whose ID is on the x-axis. This aims to show how reset-prone you were during different times, with lower points indicating less resets.
 
-### `LivesplitData.plot_completed_over_time(only_pbs -> bool)`
+* `drop_na`: Whether to include rows that have missing data from your plot. The default value is set to `False`.
+* `time_limit`: Determines an optional upper bound for times included in the plot. Must be in the format 'hh:mm:ss'. No upper bound by default.
+* `plot`: Determines whether you want to see this as a standalone graph. Setting this to `True` will cause `plt.show()` to be run. Setting this to `False` will cause `plt.show()` to not be running, allowing you to add more graphs to your plot should you want to do that. The default value is set to `True`.
+
+### `LivesplitData.chance_run_continues(split_name -> str) -> float`
+
+Assuming your run makes it to `split_name`, returns the percentage of runs that get past `split_name`.
+
+* `split_name`: Determines which split to analyze. Must match the split name exactly, *including subsplit notation*.
+
+### `LivesplitData.percent_runs_past(split_name -> str)`
+
+Returns the percentage of runs that get past `split_name` (this information is just pulled from `LivesplitData.split_info_df['PercentRunsPassed']`)
+
+* `split_name`: Determines which split to analyze. Must match the split name exactly, *including subsplit notation*.
+
+### `LivesplitData.plot_completed_over_time(only_pbs -> bool, drop_na -> bool, time_limit -> str, plot -> bool)`
 
 Graphs completed runs by the date performed. Y-axis shows the length of the run, and X-axis shows the date completed. 
 
 * `only_pbs`: Indicates whether to show all completed runs if set to `False`, or only runs that were personal bests at the time if set to `True`. The default value is set to `False`.
+* `drop_na`: Whether to include rows that have missing data from your plot. The default value is set to `False`.
+* `time_limit`: Determines an optional upper bound for times included in the plot. Must be in the format 'hh:mm:ss'. No upper bound by default.
+* `plot`: Determines whether you want to see this as a standalone graph. Setting this to `True` will cause `plt.show()` to be run. Setting this to `False` will cause `plt.show()` to not be running, allowing you to add more graphs to your plot should you want to do that. The default value is set to `True`.
 
-### `LivesplitData.plot_splits_violin_plot(completed_runs -> bool, drop_na -> bool)`
+### `LivesplitData.plot_splits_violin_plot(completed_runs -> bool, drop_na -> bool, plot -> bool)`
 
 Creates a violin plot using the segments in your splits data. To read a violin plot, the length from top to bottom is the range of your data, and the thickness is the number of data points that are close to that specific y-value. Therefore, a thicker part of the range means more of your values are clustered in that area whereas a thinner part means less values are clustered in that area.
 
-* `completed_runs`: Whether to only include completed runs in the data to plot. The default value is set to `False`.
-* `drop_na`: Whether to rows that have missing data from your plot. The default value is set to `False`.
+* `completed_runs`: Whether to only include completed runs in the data to plot. The default value is set to `True`.
+* `drop_na`: Whether to include rows that have missing data from your plot. The default value is set to `True`.
+* `plot`: Determines whether you want to see this as a standalone graph. Setting this to `True` will cause `plt.show()` to be run. Setting this to `False` will cause `plt.show()` to not be running, allowing you to add more graphs to your plot should you want to do that. The default value is set to `True`.
 
 
-### `LivesplitData.plot_completed_runs_lineplot(drop_na -> bool, scale -> str)`
+### `LivesplitData.plot_completed_runs_lineplot(drop_na -> bool, scale -> str, plot -> bool)`
 
 Creates a lineplot of all your completed runs. Your splits names are on the x-axis, and the difference in the time of that segment from the mean is on the y-axis. This lets you easily visualize which segments you need more practice on.
 
-* `drop_na`: Whether to rows that have missing data from your plot. The default value is set to `False`.
+* `drop_na`: Whether to include rows that have missing data from your plot. The default value is set to `True`.
 * `scale`: Whether the scale of the y-axis should be in seconds or minutes. The default is `seconds`. Passing anything other than `seconds` or `minutes` will result in an error. 
+* `plot`: Determines whether you want to see this as a standalone graph. Setting this to `True` will cause `plt.show()` to be run. Setting this to `False` will cause `plt.show()` to not be running, allowing you to add more graphs to your plot should you want to do that. The default value is set to `True`.
 
 
-### `LivesplitData.plot_completed_runs_heatmap(drop_na -> bool)`
+### `LivesplitData.plot_completed_runs_heatmap(drop_na -> bool, plot -> bool)`
 
 Creates a heatmap of all your completed runs. The run ID is on the y-axis and the split name is on the x-axis. The color (indicated by the legend on the right side of the plot) indicates how much faster/slower that split was from the mean. Just a cool color plot to see how well your runs do :()
 
-* `drop_na`: Whether to rows that have missing data from your plot. The default value is set to `False`.
+* `drop_na`: Whether to include rows that have missing data from your plot. The default value is set to `False`.
+* `plot`: Determines whether you want to see this as a standalone graph. Setting this to `True` will cause `plt.show()` to be run. Setting this to `False` will cause `plt.show()` to not be running, allowing you to add more graphs to your plot should you want to do that. The default value is set to `True`.
