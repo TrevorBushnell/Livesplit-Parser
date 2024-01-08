@@ -67,20 +67,19 @@ class LivesplitData:
         if plot:
             plt.show()
 
-    def split_pass_percentage(self, split_name = None):
+    def chance_run_continues(self, split_name):
         df = self.split_info_df[['NumRunsPassed']]
-        arr = df.index
         
         #set curr to the # of attempts making it past the previous split
         curr = self.num_attempts
-        for i in arr:
+        for i in df.index:
             if i == split_name:
                 previous = curr
             curr = df['NumRunsPassed'][i]
         # %of runs (which made it to this split) that made it past this split
         return df['NumRunsPassed'][split_name] / previous * 100
     
-    def split_comp_percentage(self, split_name = None) :
+    def percent_runs_past(self, split_name) :
         # %of runs that made it past this split
         return self.split_info_df['NumRunsPassed'][split_name] / self.num_attempts * 100
     
