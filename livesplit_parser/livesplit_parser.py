@@ -39,10 +39,13 @@ class LivesplitData:
         plt.ylabel('Resets Priot to Run Completion')
         plt.xticks(rotation=90)
 
-    def plot_completed_over_time(self, only_pbs=False) :
+    def plot_completed_over_time(self, only_pbs=False, drop_na=True) :
         #set ids from 0, remove useless columns
         df = self.__get_completed_runs_data()[['ended', 'RealTime']].reset_index(drop= True)
         
+        if drop_na:
+            df.dropna(inplace=True)
+
         lis = []
         lis2 = []
 
@@ -86,7 +89,7 @@ class LivesplitData:
             df1.to_excel(writer, sheet_name='Attempt Info')
             df2.to_excel(writer, sheet_name='Splits Info')
 
-    def plot_splits_violin_plot(self, completed_runs=False, drop_na=False):
+    def plot_splits_violin_plot(self, completed_runs=False, drop_na=True):
         data = self.attempt_info_df[[c for c in self.attempt_info_df.columns if '_Sec' in c and not 'RealTime' in c]]
         if completed_runs:
             data = self.__get_completed_runs_data()[[c for c in data.columns if '_Sec' in c and not 'RealTime' in c]]
@@ -99,7 +102,7 @@ class LivesplitData:
         plt.title('Split Time Distributions')
         plt.show()
 
-    def plot_completed_runs_lineplot(self, drop_na=False, scale='seconds'):
+    def plot_completed_runs_lineplot(self, drop_na=True, scale='seconds'):
         data = self.__get_completed_runs_data()
         plot_cols = [c for c in data.columns if 'Sec' in c and not 'RealTime' in c]
         data = data[plot_cols]
@@ -134,7 +137,7 @@ class LivesplitData:
         plt.legend()
         plt.show()
 
-    def plot_completed_runs_heatmap(self, drop_na=False):
+    def plot_completed_runs_heatmap(self, drop_na=True):
         data = self.__get_completed_runs_data()
         plot_cols = [c for c in data.columns if 'Sec' in c and not 'RealTime' in c]
         data = data[plot_cols]
