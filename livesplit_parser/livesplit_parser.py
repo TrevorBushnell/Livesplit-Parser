@@ -123,7 +123,7 @@ class LivesplitData:
 
     def plot_completed_runs_lineplot(self, drop_na=True, scale='seconds'):
         data = self.__get_completed_runs_data()
-        plot_cols = [c for c in data.columns if 'Sec' in c and not 'RealTime' in c]
+        plot_cols = [c for c in data.columns if '_Sec' in c and not 'RealTime' in c]
         data = data[plot_cols]
         data.rename(columns = {c:c[:-4] for c in data.columns}, inplace=True)
 
@@ -158,7 +158,7 @@ class LivesplitData:
 
     def plot_completed_runs_heatmap(self, drop_na=True):
         data = self.__get_completed_runs_data()
-        plot_cols = [c for c in data.columns if 'Sec' in c and not 'RealTime' in c]
+        plot_cols = [c for c in data.columns if '_Sec' in c and not 'RealTime' in c]
         data = data[plot_cols]
         data.rename(columns={c:c[:-4] for c in data.columns}, inplace=True)
         
@@ -194,6 +194,8 @@ class LivesplitData:
         attempt_info_df = pd.DataFrame(data['AttemptHistory']['Attempt'])
         if 'PauseTime' in attempt_info_df:
             attempt_info_df.drop(columns=['PauseTime'], inplace=True)
+        if 'GameTime' in attempt_info_df.columns:
+            attempt_info_df.drop(columns=['GameTime'], inplace=True)
         attempt_info_df.columns = ['id', 'started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RealTime']
         attempt_info_df['id'] = attempt_info_df['id'].astype(int)
         attempt_info_df['isStartedSynced'] = attempt_info_df['isStartedSynced'].astype(bool)
