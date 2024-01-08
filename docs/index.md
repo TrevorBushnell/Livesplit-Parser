@@ -64,6 +64,18 @@ Takes the attempt data and plots the number of resets on the y-axis between each
 * `time_limit`: Determines an optional upper bound for times included in the plot. Must be in the format 'hh:mm:ss'. No upper bound by default.
 * `plot`: Determines whether you want to see this as a standalone graph. Setting this to `True` will cause `plt.show()` to be run. Setting this to `False` will cause `plt.show()` to not be running, allowing you to add more graphs to your plot should you want to do that. The default value is set to `True`.
 
+### `LivesplitData.split_pass_percentage(split_name -> str)`
+
+Takes a given split and returns the percentage of runs that pass that split, given that the run made it that far at all. 
+
+* `split_name`: Determines which split to analyze. Must match the split name exactly, including subsplit notation.Required variable for function.
+
+### `LivesplitData.split_comp_percentage(split_name -> str)`
+
+Takes a given split and returns the percentage of runs that pass that split, out of all total runs.
+
+* `split_name`: Determines which split to analyze. Must match the split name exactly, including subsplit notation. Required variable for function.
+
 ### `LivesplitData.plot_completed_over_time(only_pbs -> bool, drop_na -> bool, time_limit -> str, plot -> bool)`
 
 Graphs completed runs by the date performed. Y-axis shows the length of the run, and X-axis shows the date completed. 
