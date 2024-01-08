@@ -33,7 +33,7 @@ class LivesplitData:
             df1.to_excel(writer, sheet_name='Attempt Info')
             df2.to_excel(writer, sheet_name='Splits Info')
 
-    def plot_num_resets(self, drop_na=False, time_limit='') :
+    def plot_num_resets(self, drop_na=False, time_limit='', plot=True) :
         #retain only ids and times
         df = self.__get_completed_runs_data()[['RealTime']]
 
@@ -64,14 +64,16 @@ class LivesplitData:
         plt.xlabel('Attempt #')
         plt.ylabel('Resets Priot to Run Completion')
         plt.xticks(rotation=90)
+        if plot:
+            plt.show()
 
-    def plot_completed_over_time(self, only_pbs=False, drop_na=False, time_limit='') :
+    def plot_completed_over_time(self, only_pbs=False, drop_na=False, time_limit='', plot=True) :
         #set ids from 0, remove useless columns
         df = self.__get_completed_runs_data()[['ended', 'RealTime']].reset_index(drop= True)
         
         #max time info and drops run with skipped splits
         time =9999999
-        if not time_limit == '':
+        if time_limit != '':
             time = self.__convert_timestr_to_float(time_limit)/60
         if drop_na:
             df.dropna(inplace=True)
@@ -105,10 +107,12 @@ class LivesplitData:
         plt.title('Completed Runs Over Time')
         plt.xlabel('Date')
         plt.ylabel('Run Times (m)')
-        plt.xticks(rotation=45)
+        plt.xticks(rotation=90)
+        if plot:
+            plt.show()
 
 
-    def plot_splits_violin_plot(self, completed_runs=False, drop_na=True):
+    def plot_splits_violin_plot(self, completed_runs=False, drop_na=True, plot=True):
         data = self.attempt_info_df[[c for c in self.attempt_info_df.columns if '_Sec' in c and not 'RealTime' in c]]
         if completed_runs:
             data = self.__get_completed_runs_data()[[c for c in data.columns if '_Sec' in c and not 'RealTime' in c]]
@@ -119,9 +123,10 @@ class LivesplitData:
         sns.violinplot(x='Split Name', y='Split Length (Sec)', data=data)
         plt.xticks(rotation=90)
         plt.title('Split Time Distributions')
-        plt.show()
+        if plot:
+            plt.show()
 
-    def plot_completed_runs_lineplot(self, drop_na=True, scale='seconds'):
+    def plot_completed_runs_lineplot(self, drop_na=True, scale='seconds', plot=True):
         data = self.__get_completed_runs_data()
         plot_cols = [c for c in data.columns if '_Sec' in c and not 'RealTime' in c]
         data = data[plot_cols]
@@ -131,7 +136,10 @@ class LivesplitData:
             data.dropna(inplace=True)
 
         for c in data.columns:
-            avg = self.__convert_timestr_to_float(self.split_info_df['Average'][c])
+            if drop_na:
+                avg = data[c].mean()
+            else:
+                avg = self.__convert_timestr_to_float(self.split_info_df['Average'][c])
             if scale == 'minutes':
                 avg /= 60
 
@@ -150,13 +158,14 @@ class LivesplitData:
         if self.__get_pb_id() in data.index:
             ax.plot(row.index, row.values, color='red', label='Personal Best')
         plt.xlabel('Split Name')
-        plt.xticks(rotation=60)
+        plt.xticks(rotation=90)
         plt.ylabel('Deviation From Mean (Seconds)')
         plt.title('Run Time Distributions')
         plt.legend()
-        plt.show()
+        if plot:
+            plt.show()
 
-    def plot_completed_runs_heatmap(self, drop_na=True):
+    def plot_completed_runs_heatmap(self, drop_na=True, plot=True):
         data = self.__get_completed_runs_data()
         plot_cols = [c for c in data.columns if '_Sec' in c and not 'RealTime' in c]
         data = data[plot_cols]
@@ -166,7 +175,10 @@ class LivesplitData:
             data.dropna(inplace=True)
 
         for c in data.columns:
-            avg = self.__convert_timestr_to_float(self.split_info_df['Average'][c])
+            if drop_na:
+                avg = data[c].mean()
+            else:
+                avg = self.__convert_timestr_to_float(self.split_info_df['Average'][c])
 
             for i in data.index:
                 if not pd.isna(data[c][i]):        
@@ -176,8 +188,10 @@ class LivesplitData:
 
         plt.title('Heatmap of Completed Run Splits (Compared to Avg)')
         plt.xlabel('Split Name')
+        plt.xticks(rotation=90)
         plt.ylabel('Completed Run ID')
-        plt.show()
+        if plot:
+            plt.show()
     
     ##################### CLASS HELPER FUNCTIONS ##############
     def __compute_finished_runs_count(self, data):
