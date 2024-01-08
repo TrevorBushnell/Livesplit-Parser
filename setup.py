@@ -20,6 +20,6 @@ setup(
     long_description_content_type="text/markdown",
     long_description=long_description,
     packages=find_packages(),
-    install_requires=['pandas', 'numpy', 'xmltodict', 'datetime'],
+    install_requires=['pandas', 'numpy', 'xmltodict', 'matplotlib', 'seaborn', 'datetime', 'xlsxwriter'],
     keywords=['python', 'speedrunning', 'livesplit']
 )

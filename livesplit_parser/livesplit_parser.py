@@ -1,20 +1,161 @@
+import xml.etree.ElementTree as ET
 import xmltodict
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 from datetime import datetime, timedelta
 
 class LivesplitData:
     def __init__(self, fpath):
-        with open(fpath, 'r') as f:
-            xml_dict = xmltodict.parse(f.read())['Run']
-
+        tree = ET.parse(fpath)
+        xml_data = tree.getroot()
+        xml_str = ET.tostring(xml_data, encoding='utf-8', method='xml')
+        xml_dict = dict(xmltodict.parse(xml_str))['Run']
+        self.name = fpath[:-4]
         self.num_attempts = int(xml_dict['AttemptCount'])
         self.num_completed_attempts = self.__compute_finished_runs_count(xml_dict)
         self.percent_runs_completed = self.num_completed_attempts / self.num_attempts * 100
         self.attempt_info_df = self.__parse_attempt_data(xml_dict)
+        self.attempt_info_df = self.__add_float_seconds_cols(self.attempt_info_df, [val for val in list(self.attempt_info_df.columns) if val not in ['started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RunCompleted']])
         self.split_info_df = self.__parse_segment_data(xml_dict, self.attempt_info_df)
+        self.split_info_df = self.__add_float_seconds_cols(self.split_info_df, ['PersonalBest', 'BestSegment', 'Average', 'Median'])
+
+    def plot_num_resets(self) :
+        arr = self.__get_completed_run_ids()
+        
+        lis1 = []
+        last = 0
+        for i in arr:
+            lis1.append(i-last-1)
+            last = i
+
+        sns.lineplot(x=arr, y=lis1)
+
+        plt.xlim(0, 1.05 * self.num_attempts)
+        plt.ylim(0, 1.1 * max(lis1))
+        plt.title('Times reset between completed runs')
+        plt.xlabel('Attempt #')
+        plt.ylabel('Resets Priot to Run Completion')
+        plt.xticks(rotation=90)
+
+    def plot_completed_over_time(self, only_pbs=False) :
+        #set ids from 0, remove useless columns
+        df = self.__get_completed_runs_data()[['ended', 'RealTime']].reset_index(drop= True)
+        
+        lis = []
+        lis2 = []
+
+        #determine first finished run (for only pbs)
+        lowest = self.__convert_timestr_to_float(df['RealTime'][0])
+        
+        if only_pbs: #add only pbs
+            for i in range(self.num_completed_attempts):
+                #check if current run was a pb or not, add to graph if so
+                curr = self.__convert_timestr_to_float(df['RealTime'][i])/60
+                if curr < lowest :
+                    lis.append(curr)
+                    lis2.append(df['ended'][i])
+                    lowest = curr
+                
+        else : #add all completed runs
+            for i in range(self.num_completed_attempts):
+                lis.append(self.__convert_timestr_to_float(df['RealTime'][i]) / 60)
+                lis2.append(df['ended'][i])
+        
+        arr = np.asarray(lis) #times achieved
+        arr2 = np.asarray(lis2) #dates done on
+        
+        sns.lineplot(y= arr, x= arr2, marker='o', linestyle='-')
+        #plot info
+        plt.title('Completed Runs Over Time')
+        plt.xlabel('Date')
+        plt.ylabel('Run Times (m)')
+        plt.xticks(rotation=45)
 
 
+    def export_data(self):
+        # Specify the Excel file path
+        excel_file_path = f'{self.name}.xlsx'
+        df1 = self.attempt_info_df[[v for v in self.attempt_info_df.columns if not '_Sec' in v]]
+        df2 = self.split_info_df[['PersonalBest', 'PersonalBestSplitTime', 'BestSegment', 'BestSegmentSplitTime', 'StDev', 'Average', 'AverageSplitTime', 'Median', 'MedianSplitTime', 'NumRunsPassed', 'PercentRunsPassed']]
+
+        # Create a Pandas Excel writer using ExcelWriter
+        with pd.ExcelWriter(excel_file_path, engine='xlsxwriter') as writer:
+            # Write each dataframe to a different sheet
+            df1.to_excel(writer, sheet_name='Attempt Info')
+            df2.to_excel(writer, sheet_name='Splits Info')
+
+    def plot_splits_violin_plot(self, completed_runs=False, drop_na=False):
+        data = self.attempt_info_df[[c for c in self.attempt_info_df.columns if '_Sec' in c and not 'RealTime' in c]]
+        if completed_runs:
+            data = self.__get_completed_runs_data()[[c for c in data.columns if '_Sec' in c and not 'RealTime' in c]]
+        data.rename(columns={c:c[:-4] for c in data.columns}, inplace=True)
+        if drop_na:
+            data.dropna(inplace=True)
+        data = pd.melt(data, var_name='Split Name', value_name='Split Length (Sec)')
+        sns.violinplot(x='Split Name', y='Split Length (Sec)', data=data)
+        plt.xticks(rotation=90)
+        plt.title('Split Time Distributions')
+        plt.show()
+
+    def plot_completed_runs_lineplot(self, drop_na=False, scale='seconds'):
+        data = self.__get_completed_runs_data()
+        plot_cols = [c for c in data.columns if 'Sec' in c and not 'RealTime' in c]
+        data = data[plot_cols]
+        data.rename(columns = {c:c[:-4] for c in data.columns}, inplace=True)
+
+        if drop_na:
+            data.dropna(inplace=True)
+
+        for c in data.columns:
+            avg = self.__convert_timestr_to_float(self.split_info_df['Average'][c])
+            if scale == 'minutes':
+                avg /= 60
+
+            for i in data.index:
+                if not pd.isna(data[c][i]):
+                    if scale == 'seconds':
+                        data.loc[i, c] = data[c][i] - avg
+                    elif scale == 'minutes':
+                        data.loc[i, c] = (data[c][i]/60) - avg
+
+        fig, ax = plt.subplots()
+        for index, row in data.iterrows():
+            if int(index) != self.__get_pb_id():
+                ax.plot(row.index, row.values, color='grey')
+            
+        if self.__get_pb_id() in data.index:
+            ax.plot(row.index, row.values, color='red', label='Personal Best')
+        plt.xlabel('Split Name')
+        plt.xticks(rotation=60)
+        plt.ylabel('Deviation From Mean (Seconds)')
+        plt.title('Run Time Distributions')
+        plt.legend()
+        plt.show()
+
+    def plot_completed_runs_heatmap(self, drop_na=False):
+        data = self.__get_completed_runs_data()
+        plot_cols = [c for c in data.columns if 'Sec' in c and not 'RealTime' in c]
+        data = data[plot_cols]
+        data.rename(columns={c:c[:-4] for c in data.columns}, inplace=True)
+        
+        if drop_na:
+            data.dropna(inplace=True)
+
+        for c in data.columns:
+            avg = self.__convert_timestr_to_float(self.split_info_df['Average'][c])
+
+            for i in data.index:
+                if not pd.isna(data[c][i]):        
+                    data.loc[i, c] = data[c][i] - avg
+
+        hm = sns.heatmap(data=data, linewidths=0.5, linecolor='black')
+
+        plt.title('Heatmap of Completed Run Splits (Compared to Avg)')
+        plt.xlabel('Split Name')
+        plt.ylabel('Completed Run ID')
+        plt.show()
     
     ##################### CLASS HELPER FUNCTIONS ##############
     def __compute_finished_runs_count(self, data):
@@ -29,6 +170,8 @@ class LivesplitData:
     def __parse_attempt_data(self, data):
         # initial data parsing
         attempt_info_df = pd.DataFrame(data['AttemptHistory']['Attempt'])
+        if 'PauseTime' in attempt_info_df:
+            attempt_info_df.drop(columns=['PauseTime'], inplace=True)
         attempt_info_df.columns = ['id', 'started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RealTime']
         attempt_info_df['id'] = attempt_info_df['id'].astype(int)
         attempt_info_df['isStartedSynced'] = attempt_info_df['isStartedSynced'].astype(bool)
@@ -217,10 +360,40 @@ class LivesplitData:
         # clean final dataframe
         segment_info_df.drop(['SplitTimes', 'BestSegmentTime', 'SegmentHistory'], axis=1, inplace=True)
         segment_info_df.rename(columns={'PersonalBest':'PersonalBestSplitTime', 'PersonalBestSplitTime':'PersonalBest'}, inplace=True)
-        segment_info_df = segment_info_df[['PersonalBest', 'PersonalBestSplitTime', 'BestSegment', 'BestSegmentSplitTime', 'StDev', 'Average', 'AverageSplitTime', 'Median', 'MedianSplitTime', 'NumRunsPassed', 'PercentRunsPassed']]
+        segment_info_df = self.__add_float_seconds_cols(segment_info_df, ['PersonalBest', 'BestSegment', 'StDev', 'Average', 'Median'])
+        segment_info_df = segment_info_df[['PersonalBest', 'PersonalBest_Sec', 'PersonalBestSplitTime', 'BestSegment', 'BestSegment_Sec', 'BestSegmentSplitTime', 'StDev', 'StDev_Sec', 'Average', 'Average_Sec', 'AverageSplitTime', 'Median', 'Median_Sec', 'MedianSplitTime', 'NumRunsPassed', 'PercentRunsPassed']]
 
         return segment_info_df
-    
+        
+    def __convert_timestr_to_float(self, time_str):
+        # Split the time string into hours, minutes, seconds, and milliseconds
+        hours, minutes, seconds = map(float, time_str.split(':'))
+
+        # Calculate the total number of seconds
+        total_seconds = hours * 3600 + minutes * 60 + seconds
+
+        return total_seconds
+
+    def __add_float_seconds_cols(self, df, col_names):
+        for c in col_names:
+            vals = []
+
+            for i in df.index:
+                if pd.isna(df[c][i]):
+                    vals.append(np.nan)
+                else:
+                    vals.append(self.__convert_timestr_to_float(df[c][i]))
+
+            df[c+'_Sec'] = vals
+            df[c+'_Sec'] = df[c+'_Sec'].astype(float)
+
+        return df
 
     def __get_completed_run_ids(self):
         return self.attempt_info_df[self.attempt_info_df['RunCompleted']].index
+    
+    def __get_completed_runs_data(self):
+        return self.attempt_info_df[self.attempt_info_df['RunCompleted']]
+
+    def __get_pb_id(self):
+        return int(self.__get_completed_runs_data()['RealTime'].idxmin())
