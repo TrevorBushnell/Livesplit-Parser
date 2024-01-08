@@ -91,4 +91,4 @@ Creates a lineplot of all your completed runs. Your splits names are on the x-ax
 
 Creates a heatmap of all your completed runs. The run ID is on the y-axis and the split name is on the x-axis. The color (indicated by the legend on the right side of the plot) indicates how much faster/slower that split was from the mean. Just a cool color plot to see how well your runs do :()
 
-* `drop_na`: Whether to rows that have missing data from your plot. The default value is set to `False`.
+* `drop_na`: Whether to include rows that have missing data from your plot. The default value is set to `False`.
