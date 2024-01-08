@@ -56,7 +56,7 @@ From here, you can use the other included functions (listed below) to get some p
 
 Writes the data within the Livesplit file to an Excel sheet. The first sheet is the data for each specific attempt, and the second sheet is the info for each of your splits. The name of the sheet will be the name of the split file by default.
 
-### `LivesplitData.rplot_num_resets()`
+### `LivesplitData.plot_num_resets()`
 
 Takes the attempt data and plots the number of resets on the y-axis between each completed run whose ID is on the x-axis. This aims to show how reset-prone you were during different times, with lower points indicating less resets.
 
