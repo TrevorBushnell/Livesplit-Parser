@@ -21,62 +21,6 @@ class LivesplitData:
         self.split_info_df = self.__parse_segment_data(xml_dict, self.attempt_info_df)
         self.split_info_df = self.__add_float_seconds_cols(self.split_info_df, ['PersonalBest', 'BestSegment', 'Average', 'Median'])
 
-    def plot_num_resets(self) :
-        arr = self.__get_completed_run_ids()
-        
-        lis1 = []
-        last = 0
-        for i in arr:
-            lis1.append(i-last-1)
-            last = i
-
-        sns.lineplot(x=arr, y=lis1)
-
-        plt.xlim(0, 1.05 * self.num_attempts)
-        plt.ylim(0, 1.1 * max(lis1))
-        plt.title('Times reset between completed runs')
-        plt.xlabel('Attempt #')
-        plt.ylabel('Resets Priot to Run Completion')
-        plt.xticks(rotation=90)
-
-    def plot_completed_over_time(self, only_pbs=False, drop_na=True) :
-        #set ids from 0, remove useless columns
-        df = self.__get_completed_runs_data()[['ended', 'RealTime']].reset_index(drop= True)
-        
-        if drop_na:
-            df.dropna(inplace=True)
-
-        lis = []
-        lis2 = []
-
-        #determine first finished run (for only pbs)
-        lowest = self.__convert_timestr_to_float(df['RealTime'][0])
-        
-        if only_pbs: #add only pbs
-            for i in range(self.num_completed_attempts):
-                #check if current run was a pb or not, add to graph if so
-                curr = self.__convert_timestr_to_float(df['RealTime'][i])/60
-                if curr < lowest :
-                    lis.append(curr)
-                    lis2.append(df['ended'][i])
-                    lowest = curr
-                
-        else : #add all completed runs
-            for i in range(self.num_completed_attempts):
-                lis.append(self.__convert_timestr_to_float(df['RealTime'][i]) / 60)
-                lis2.append(df['ended'][i])
-        
-        arr = np.asarray(lis) #times achieved
-        arr2 = np.asarray(lis2) #dates done on
-        
-        sns.lineplot(y= arr, x= arr2, marker='o', linestyle='-')
-        #plot info
-        plt.title('Completed Runs Over Time')
-        plt.xlabel('Date')
-        plt.ylabel('Run Times (m)')
-        plt.xticks(rotation=45)
-
-
     def export_data(self):
         # Specify the Excel file path
         excel_file_path = f'{self.name}.xlsx'
@@ -88,6 +32,81 @@ class LivesplitData:
             # Write each dataframe to a different sheet
             df1.to_excel(writer, sheet_name='Attempt Info')
             df2.to_excel(writer, sheet_name='Splits Info')
+
+    def plot_num_resets(self, drop_na=False, time_limit='') :
+        #retain only ids and times
+        df = self.__get_completed_runs_data()[['RealTime']]
+
+        #sets max time param and drops runs w skipped splits
+        time = 9999999
+        if not time_limit == '' :
+            time = self.__convert_timestr_to_float(time_limit)
+        if drop_na:
+            df.dropna(inplace=True)
+        arr = df.index
+
+        #create arrays of times to graph
+        lis1 = []
+        lis2 = []
+        last = 0
+        for i in arr:
+            if self.__convert_timestr_to_float(df['RealTime'][i]) < time :
+                lis2.append(i)
+                lis1.append(i-last-1)
+                last = i
+
+        #plot info
+        sns.lineplot(x=lis2, y=lis1, marker='o', linestyle='-')
+
+        plt.xlim(0, 1.05 * self.num_attempts)
+        plt.ylim(0, 1.1 * max(lis1))
+        plt.title('Times reset between completed runs')
+        plt.xlabel('Attempt #')
+        plt.ylabel('Resets Priot to Run Completion')
+        plt.xticks(rotation=90)
+
+    def plot_completed_over_time(self, only_pbs=False, drop_na=False, time_limit='') :
+        #set ids from 0, remove useless columns
+        df = self.__get_completed_runs_data()[['ended', 'RealTime']].reset_index(drop= True)
+        
+        #max time info and drops run with skipped splits
+        time =9999999
+        if not time_limit == '':
+            time = self.__convert_timestr_to_float(time_limit)/60
+        if drop_na:
+            df.dropna(inplace=True)
+
+        lis = []
+        lis2 = []
+
+        #determine first finished run (for only pbs)
+        lowest = self.__convert_timestr_to_float(df['RealTime'][0])
+        
+        #create arrays of times to graph
+        if only_pbs: #add only pbs
+            for i in range(self.num_completed_attempts):
+                #check if current run was a pb or not, add to graph if so
+                curr = self.__convert_timestr_to_float(df['RealTime'][i])/60
+                if curr < lowest and curr < time:
+                    lis.append(curr)
+                    lis2.append(df['ended'][i])
+                    lowest = curr
+                
+        else : #add all completed runs
+            for i in range(self.num_completed_attempts):
+                curr = self.__convert_timestr_to_float(df['RealTime'][i])/60
+                if curr < time :
+                    lis.append(self.__convert_timestr_to_float(df['RealTime'][i]) / 60)
+                    lis2.append(df['ended'][i])
+        
+        #plot info
+        sns.lineplot(y= lis, x= lis2, marker='o', linestyle='-')
+        
+        plt.title('Completed Runs Over Time')
+        plt.xlabel('Date')
+        plt.ylabel('Run Times (m)')
+        plt.xticks(rotation=45)
+
 
     def plot_splits_violin_plot(self, completed_runs=False, drop_na=True):
         data = self.attempt_info_df[[c for c in self.attempt_info_df.columns if '_Sec' in c and not 'RealTime' in c]]

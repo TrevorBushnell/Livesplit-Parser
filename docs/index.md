@@ -56,29 +56,34 @@ From here, you can use the other included functions (listed below) to get some p
 
 Writes the data within the Livesplit file to an Excel sheet. The first sheet is the data for each specific attempt, and the second sheet is the info for each of your splits. The name of the sheet will be the name of the split file by default.
 
-### `LivesplitData.plot_num_resets()`
+### `LivesplitData.plot_num_resets(drop_na -> bool, time_limit -> str)`
 
 Takes the attempt data and plots the number of resets on the y-axis between each completed run whose ID is on the x-axis. This aims to show how reset-prone you were during different times, with lower points indicating less resets.
 
-### `LivesplitData.plot_completed_over_time(only_pbs -> bool)`
+* `drop_na`: Whether to include rows that have missing data from your plot. The default value is set to `False`.
+* `time_limit`: Determines an upper bound for times included in the plot. Must be in the format 'hh:mm:ss'.
+
+### `LivesplitData.plot_completed_over_time(only_pbs -> bool, drop_na -> bool, time_limit -> str)`
 
 Graphs completed runs by the date performed. Y-axis shows the length of the run, and X-axis shows the date completed. 
 
 * `only_pbs`: Indicates whether to show all completed runs if set to `False`, or only runs that were personal bests at the time if set to `True`. The default value is set to `False`.
+* `drop_na`: Whether to include rows that have missing data from your plot. The default value is set to `False`.
+* `time_limit`: Determines an upper bound for times included in the plot. Must be in the format 'hh:mm:ss'.
 
 ### `LivesplitData.plot_splits_violin_plot(completed_runs -> bool, drop_na -> bool)`
 
 Creates a violin plot using the segments in your splits data. To read a violin plot, the length from top to bottom is the range of your data, and the thickness is the number of data points that are close to that specific y-value. Therefore, a thicker part of the range means more of your values are clustered in that area whereas a thinner part means less values are clustered in that area.
 
-* `completed_runs`: Whether to only include completed runs in the data to plot. The default value is set to `False`.
-* `drop_na`: Whether to rows that have missing data from your plot. The default value is set to `False`.
+* `completed_runs`: Whether to only include completed runs in the data to plot. The default value is set to `True`.
+* `drop_na`: Whether to include rows that have missing data from your plot. The default value is set to `True`.
 
 
 ### `LivesplitData.plot_completed_runs_lineplot(drop_na -> bool, scale -> str)`
 
 Creates a lineplot of all your completed runs. Your splits names are on the x-axis, and the difference in the time of that segment from the mean is on the y-axis. This lets you easily visualize which segments you need more practice on.
 
-* `drop_na`: Whether to rows that have missing data from your plot. The default value is set to `False`.
+* `drop_na`: Whether to include rows that have missing data from your plot. The default value is set to `True`.
 * `scale`: Whether the scale of the y-axis should be in seconds or minutes. The default is `seconds`. Passing anything other than `seconds` or `minutes` will result in an error. 
 
 
