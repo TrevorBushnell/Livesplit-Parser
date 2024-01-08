@@ -21,7 +21,7 @@ class LivesplitData:
         self.split_info_df = self.__parse_segment_data(xml_dict, self.attempt_info_df)
         self.split_info_df = self.__add_float_seconds_cols(self.split_info_df, ['PersonalBest', 'BestSegment', 'Average', 'Median'])
 
-    def reset_graph(self) :
+    def plot_num_resets(self) :
         arr = self.__get_completed_run_ids()
         
         lis1 = []
@@ -29,8 +29,6 @@ class LivesplitData:
         for i in arr:
             lis1.append(i-last-1)
             last = i
-
-
 
         sns.lineplot(x=arr, y=lis1)
 
@@ -40,8 +38,6 @@ class LivesplitData:
         plt.xlabel('Attempt #')
         plt.ylabel('Resets Priot to Run Completion')
         plt.xticks(rotation=90)
-        
-
 
     def completed_over_time(self, only_pbs=False) :
         #set ids from 0, remove useless columns
