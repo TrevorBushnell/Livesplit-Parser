@@ -33,13 +33,13 @@ class LivesplitData:
             df1.to_excel(writer, sheet_name='Attempt Info')
             df2.to_excel(writer, sheet_name='Splits Info')
 
-    def plot_num_resets(self, drop_na=False, time_limit='', plot=True) :
+    def plot_num_resets(self, drop_na=False, time_limit=None, plot=True) :
         #retain only ids and times
         df = self.__get_completed_runs_data()[['RealTime']]
 
         #sets max time param and drops runs w skipped splits
         time = 9999999
-        if not time_limit == '' :
+        if time_limit != None :
             time = self.__convert_timestr_to_float(time_limit)
         if drop_na:
             df.dropna(inplace=True)
@@ -62,18 +62,34 @@ class LivesplitData:
         plt.ylim(0, 1.1 * max(lis1))
         plt.title('Times reset between completed runs')
         plt.xlabel('Attempt #')
-        plt.ylabel('Resets Priot to Run Completion')
+        plt.ylabel('Resets Prior to Run Completion')
         plt.xticks(rotation=90)
         if plot:
             plt.show()
 
-    def plot_completed_over_time(self, only_pbs=False, drop_na=False, time_limit='', plot=True) :
+    def chance_run_continues(self, split_name):
+        df = self.split_info_df[['NumRunsPassed']]
+        
+        #set curr to the # of attempts making it past the previous split
+        curr = self.num_attempts
+        for i in df.index:
+            if i == split_name:
+                previous = curr
+            curr = df['NumRunsPassed'][i]
+        # %of runs (which made it to this split) that made it past this split
+        return df['NumRunsPassed'][split_name] / previous * 100
+    
+    def percent_runs_past(self, split_name) :
+        # %of runs that made it past this split
+        return self.split_info_df['NumRunsPassed'][split_name] / self.num_attempts * 100
+    
+    def plot_completed_over_time(self, only_pbs=False, drop_na=False, time_limit=None, plot=True) :
         #set ids from 0, remove useless columns
         df = self.__get_completed_runs_data()[['ended', 'RealTime']].reset_index(drop= True)
         
         #max time info and drops run with skipped splits
         time =9999999
-        if time_limit != '':
+        if time_limit != None:
             time = self.__convert_timestr_to_float(time_limit)/60
         if drop_na:
             df.dropna(inplace=True)
