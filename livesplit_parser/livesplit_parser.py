@@ -39,7 +39,7 @@ class LivesplitData:
         plt.ylabel('Resets Priot to Run Completion')
         plt.xticks(rotation=90)
 
-    def completed_over_time(self, only_pbs=False) :
+    def plot_completed_over_time(self, only_pbs=False) :
         #set ids from 0, remove useless columns
         df = self.__get_completed_runs_data()[['ended', 'RealTime']].reset_index(drop= True)
         

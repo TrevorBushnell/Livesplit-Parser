@@ -60,7 +60,7 @@ Writes the data within the Livesplit file to an Excel sheet. The first sheet is 
 
 Takes the attempt data and plots the number of resets on the y-axis between each completed run whose ID is on the x-axis. This aims to show how reset-prone you were during different times, with lower points indicating less resets.
 
-### `LivesplitData.completed_over_time(only_pbs -> bool)`
+### `LivesplitData.plot_completed_over_time(only_pbs -> bool)`
 
 Graphs completed runs by the date performed. Y-axis shows the length of the run, and X-axis shows the date completed. 
 
