@@ -27,11 +27,11 @@ print('YOUR SPLIT DATA:\n', my_run.split_info_df)
 ## TODO Features to Include
 
 - [x] Include a `StandDev` column in the `split_info_df` that includes the standard deviation of all your attempts for that split
-- [ ] Plot split time distributions using *violinplots*
-- [ ] Plot runtime distributions with the splits on the x-axis and standard deviation on the y-axis
-- [ ] Plot number of runs that reset between completed runs
-- [ ] Plot completed runs over time (run ID on x-axis, final time on y-axis)
-- [ ] Plot completed runs with a heatmap showing how good that segment was for that run
+- [x] Plot split time distributions using *violinplots*
+- [x] Plot runtime distributions with the splits on the x-axis and standard deviation on the y-axis
+- [x] Plot number of runs that reset between completed runs
+- [x] Plot completed runs over time (run ID on x-axis, final time on y-axis)
+- [x] Plot completed runs with a heatmap showing how good that segment was for that run
 - [ ] Create a Runner class that contains a list of Runners with their data and methods that plot runs against each other
 	* example: plot each runner's PB over time (runners can compare themselves against each other)
 	* another example: heatmap from before with splits on the x-axis, runner on the y-axis, and heatmap comparing that segment with the means of the personal bests of every runner included
