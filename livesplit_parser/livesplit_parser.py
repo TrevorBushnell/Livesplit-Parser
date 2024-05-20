@@ -7,11 +7,15 @@ import seaborn as sns
 from datetime import datetime, timedelta
 
 class LivesplitData:
-    def __init__(self, fpath):
+    def __init__(self, fpath, time_key='RealTime'):
+        if time_key not in ['RealTime', 'GameTime']:
+            raise ValueError('Time must be either RealTime or GameTime')
+
         tree = ET.parse(fpath)
         xml_data = tree.getroot()
         xml_str = ET.tostring(xml_data, encoding='utf-8', method='xml')
         xml_dict = dict(xmltodict.parse(xml_str))['Run']
+        self.time_key = time_key
         self.name = fpath[:-4]
         self.num_attempts = int(xml_dict['AttemptCount'])
         self.num_completed_attempts = self.__compute_finished_runs_count(xml_dict)
@@ -35,7 +39,7 @@ class LivesplitData:
 
     def plot_num_resets(self, drop_na=False, time_limit=None, plot=True) :
         #retain only ids and times
-        df = self.__get_completed_runs_data()[['RealTime']]
+        df = self.__get_completed_runs_data()[[self.time_key]]
 
         #sets max time param and drops runs w skipped splits
         time = 9999999
@@ -50,7 +54,7 @@ class LivesplitData:
         lis2 = []
         last = 0
         for i in arr:
-            if self.__convert_timestr_to_float(df['RealTime'][i]) < time :
+            if self.__convert_timestr_to_float(df[self.time_key][i]) < time :
                 lis2.append(i)
                 lis1.append(i-last-1)
                 last = i
@@ -85,7 +89,7 @@ class LivesplitData:
     
     def plot_completed_over_time(self, only_pbs=False, drop_na=False, time_limit=None, plot=True) :
         #set ids from 0, remove useless columns
-        df = self.__get_completed_runs_data()[['ended', 'RealTime']].reset_index(drop= True)
+        df = self.__get_completed_runs_data()[['ended', self.time_key]].reset_index(drop= True)
         
         #max time info and drops run with skipped splits
         time =9999999
@@ -98,13 +102,13 @@ class LivesplitData:
         lis2 = []
 
         #determine first finished run (for only pbs)
-        lowest = self.__convert_timestr_to_float(df['RealTime'][0])
+        lowest = self.__convert_timestr_to_float(df[self.time_key][0])
         
         #create arrays of times to graph
         if only_pbs: #add only pbs
             for i in range(self.num_completed_attempts):
                 #check if current run was a pb or not, add to graph if so
-                curr = self.__convert_timestr_to_float(df['RealTime'][i])/60
+                curr = self.__convert_timestr_to_float(df[self.time_key][i])/60
                 if curr < lowest and curr < time:
                     lis.append(curr)
                     lis2.append(df['ended'][i])
@@ -112,9 +116,9 @@ class LivesplitData:
                 
         else : #add all completed runs
             for i in range(self.num_completed_attempts):
-                curr = self.__convert_timestr_to_float(df['RealTime'][i])/60
+                curr = self.__convert_timestr_to_float(df[self.time_key][i])/60
                 if curr < time :
-                    lis.append(self.__convert_timestr_to_float(df['RealTime'][i]) / 60)
+                    lis.append(self.__convert_timestr_to_float(df[self.time_key][i]) / 60)
                     lis2.append(df['ended'][i])
         
         #plot info
@@ -129,9 +133,9 @@ class LivesplitData:
 
 
     def plot_splits_violin_plot(self, completed_runs=False, drop_na=True, plot=True):
-        data = self.attempt_info_df[[c for c in self.attempt_info_df.columns if '_Sec' in c and not 'RealTime' in c]]
+        data = self.attempt_info_df[[c for c in self.attempt_info_df.columns if '_Sec' in c and not self.time_key in c]]
         if completed_runs:
-            data = self.__get_completed_runs_data()[[c for c in data.columns if '_Sec' in c and not 'RealTime' in c]]
+            data = self.__get_completed_runs_data()[[c for c in data.columns if '_Sec' in c and not self.time_key in c]]
         data.rename(columns={c:c[:-4] for c in data.columns}, inplace=True)
         if drop_na:
             data.dropna(inplace=True)
@@ -144,7 +148,7 @@ class LivesplitData:
 
     def plot_completed_runs_lineplot(self, drop_na=True, scale='seconds', plot=True):
         data = self.__get_completed_runs_data()
-        plot_cols = [c for c in data.columns if '_Sec' in c and not 'RealTime' in c]
+        plot_cols = [c for c in data.columns if '_Sec' in c and not self.time_key in c]
         data = data[plot_cols]
         data.rename(columns = {c:c[:-4] for c in data.columns}, inplace=True)
 
@@ -183,7 +187,7 @@ class LivesplitData:
 
     def plot_completed_runs_heatmap(self, drop_na=True, plot=True):
         data = self.__get_completed_runs_data()
-        plot_cols = [c for c in data.columns if '_Sec' in c and not 'RealTime' in c]
+        plot_cols = [c for c in data.columns if '_Sec' in c and not self.time_key in c]
         data = data[plot_cols]
         data.rename(columns={c:c[:-4] for c in data.columns}, inplace=True)
         
@@ -214,7 +218,7 @@ class LivesplitData:
         finished_count = 0
 
         for d in data['AttemptHistory']['Attempt']:
-            if 'RealTime' in d:
+            if self.time_key in d:
                 finished_count += 1
         
         return finished_count
@@ -226,7 +230,7 @@ class LivesplitData:
             attempt_info_df.drop(columns=['PauseTime'], inplace=True)
         if 'GameTime' in attempt_info_df.columns:
             attempt_info_df.drop(columns=['GameTime'], inplace=True)
-        attempt_info_df.columns = ['id', 'started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RealTime']
+        attempt_info_df.columns = ['id', 'started', 'isStartedSynced', 'ended', 'isEndedSynced', self.time_key]
         attempt_info_df['id'] = attempt_info_df['id'].astype(int)
         attempt_info_df['isStartedSynced'] = attempt_info_df['isStartedSynced'].astype(bool)
         attempt_info_df['isEndedSynced'] = attempt_info_df['isEndedSynced'].astype(bool)
@@ -238,17 +242,17 @@ class LivesplitData:
         run_finished = []
 
         for i in attempt_info_df.index:
-            if pd.isna(attempt_info_df['RealTime'][i]):
+            if pd.isna(attempt_info_df[self.time_key][i]):
                 run_finished.append(False)
-                attempt_info_df.loc[i, 'RealTime'] = attempt_info_df['ended'][i] - attempt_info_df['started'][i]
+                attempt_info_df.loc[i, self.time_key] = attempt_info_df['ended'][i] - attempt_info_df['started'][i]
             else:
                 run_finished.append(True)
         attempt_info_df['RunCompleted'] = run_finished
         attempt_info_df['RunCompleted'] = attempt_info_df['RunCompleted'].astype(bool)
-        attempt_info_df['RealTime'] = pd.to_timedelta(attempt_info_df['RealTime'])
-        attempt_info_df['RealTime'] = attempt_info_df['RealTime'].astype(str).apply(lambda x: str(x).split()[-1])
-        # attempt_info_df['RealTime'] = pd.to_timedelta(attempt_info_df['RealTime'])
-        attempt_info_df = attempt_info_df[['started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RunCompleted', 'RealTime']]
+        attempt_info_df[self.time_key] = pd.to_timedelta(attempt_info_df[self.time_key])
+        attempt_info_df[self.time_key] = attempt_info_df[self.time_key].astype(str).apply(lambda x: str(x).split()[-1])
+        # attempt_info_df[self.time_key] = pd.to_timedelta(attempt_info_df[self.time_key])
+        attempt_info_df = attempt_info_df[['started', 'isStartedSynced', 'ended', 'isEndedSynced', 'RunCompleted', self.time_key]]
 
         # pull segment history data
         # start by getting the index values (from the attempt_history_df)
@@ -270,7 +274,7 @@ class LivesplitData:
             for t in d['SegmentHistory']['Time']:
                 # print(t)
                 try:
-                    segment_history_df.loc[int(t['@id']), seg_name] = t['RealTime']
+                    segment_history_df.loc[int(t['@id']), seg_name] = t[self.time_key]
                 except:
                     pass
 
@@ -292,8 +296,8 @@ class LivesplitData:
         pb = []
 
         for i in segment_info_df.index:
-            if 'RealTime' in segment_info_df['SplitTimes'][i]['SplitTime']:
-                pb.append(segment_info_df['SplitTimes'][i]['SplitTime']['RealTime'])
+            if self.time_key in segment_info_df['SplitTimes'][i]['SplitTime']:
+                pb.append(segment_info_df['SplitTimes'][i]['SplitTime'][self.time_key])
             else:
                 pb.append(np.nan)
 
@@ -303,7 +307,7 @@ class LivesplitData:
         best_seg = []
 
         for i in segment_info_df.index:
-            best_seg.append(segment_info_df['BestSegmentTime'][i]['RealTime'])
+            best_seg.append(segment_info_df['BestSegmentTime'][i][self.time_key])
 
         segment_info_df['BestSegment'] = best_seg
 
@@ -450,4 +454,4 @@ class LivesplitData:
         return self.attempt_info_df[self.attempt_info_df['RunCompleted']]
 
     def __get_pb_id(self):
-        return int(self.__get_completed_runs_data()['RealTime'].idxmin())
+        return int(self.__get_completed_runs_data()[self.time_key].idxmin())
