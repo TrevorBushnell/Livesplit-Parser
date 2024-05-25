@@ -316,7 +316,10 @@ class LivesplitData:
         best_seg = []
 
         for i in segment_info_df.index:
-            best_seg.append(segment_info_df['BestSegmentTime'][i]['RealTime'])
+            if segment_info_df['BestSegmentTime'][i]:
+                best_seg.append(segment_info_df['BestSegmentTime'][i]['RealTime'])
+            else:
+                best_seg.append(np.nan)
 
         segment_info_df['BestSegment'] = best_seg
 
