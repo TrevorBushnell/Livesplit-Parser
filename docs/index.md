@@ -67,7 +67,6 @@ These are the following private member variables you have access to with every `
 * `LivesplitData.platform_uses_emulator`: is `True` if the runs were done using an emulator, is `False` otherwise
 * `LivesplitData.offset`: the offset used by the splits
 * `LivesplitData.version`: the game version being run on
-* `LivesplitData.variables`: these are the category variables, which will appear assuming speedrun.com has them for the given category
 
 From here, you can use the other included functions (listed below) to get some plots about the data within your Livesplit file.
 

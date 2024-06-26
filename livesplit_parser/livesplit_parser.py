@@ -39,14 +39,6 @@ class LivesplitData:
         self.offset = xml_dict.get('Offset')
         self.version = xml_dict.get('@version')
 
-        # Category Variables. They appear when speedrun.com has them
-        self.variables = {}
-
-        for variable in variables:
-            name = variable.get('@name')
-            text = variable.get('#text')
-            self.variables[name] = text
-
     def export_data(self):
         # Specify the Excel file path
         excel_file_path = f'{self.name}.xlsx'
