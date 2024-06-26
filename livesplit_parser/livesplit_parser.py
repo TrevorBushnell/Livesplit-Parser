@@ -274,10 +274,12 @@ class LivesplitData:
 
         # now create an empty DataFrame
         segment_history_df = pd.DataFrame(index=idx, columns=col_names)
-        segment_history_df
 
         for d in data['Segments']['Segment']:
             seg_name = d['Name']
+
+            if not d['SegmentHistory']:
+                continue
 
             for t in d['SegmentHistory']['Time']:
                 # print(t)
@@ -315,7 +317,10 @@ class LivesplitData:
         best_seg = []
 
         for i in segment_info_df.index:
-            best_seg.append(segment_info_df['BestSegmentTime'][i]['RealTime'])
+            if segment_info_df['BestSegmentTime'][i]:
+                best_seg.append(segment_info_df['BestSegmentTime'][i]['RealTime'])
+            else:
+                best_seg.append(np.nan)
 
         segment_info_df['BestSegment'] = best_seg
 
@@ -370,7 +375,7 @@ class LivesplitData:
 
         for i in segment_info_df.index:
             for c in cols:
-                if not pd.isna(segment_info_df[c][i]):
+                if not pd.isna(segment_info_df[c][i]) and segment_info_df[c][i] != 'NaT':
                     segment_info_df.loc[i, c] = round_time(segment_info_df[c][i])
 
         def compute_split_times(df, col_name):
