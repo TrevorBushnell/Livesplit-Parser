@@ -25,6 +25,28 @@ class LivesplitData:
         self.split_info_df = self.__parse_segment_data(xml_dict, self.attempt_info_df)
         self.split_info_df = self.__add_float_seconds_cols(self.split_info_df, ['PersonalBest', 'BestSegment', 'Average', 'Median'])
 
+        # Optional metadata
+        metadata: dict = xml_dict.get('Metadata', {})
+        platform: dict = metadata.get('Platform', {})
+        variables: list = metadata.get('Variables', {}).get('Variable', [])
+        
+        self.game_name = xml_dict.get('GameName')
+        self.game_icon = xml_dict.get('GameIcon')
+        self.category_name = xml_dict.get('CategoryName')
+        self.layout_path = xml_dict.get('LayoutPath')
+        self.platform_name = platform.get('#text')
+        self.platform_uses_emulator = {'False': False, 'True': True}.get(platform.get('@usesEmulator'))
+        self.offset = xml_dict.get('Offset')
+        self.version = xml_dict.get('@version')
+
+        # Category Variables. They appear when speedrun.com has them
+        self.variables = {}
+
+        for variable in variables:
+            name = variable.get('@name')
+            text = variable.get('#text')
+            self.variables[name] = text
+
     def export_data(self):
         # Specify the Excel file path
         excel_file_path = f'{self.name}.xlsx'
@@ -276,10 +298,12 @@ class LivesplitData:
 
         # now create an empty DataFrame
         segment_history_df = pd.DataFrame(index=idx, columns=col_names)
-        segment_history_df
 
         for d in data['Segments']['Segment']:
             seg_name = d['Name']
+
+            if not d['SegmentHistory']:
+                continue
 
             for t in d['SegmentHistory']['Time']:
                 # print(t)
@@ -317,7 +341,10 @@ class LivesplitData:
         best_seg = []
 
         for i in segment_info_df.index:
-            best_seg.append(segment_info_df['BestSegmentTime'][i][self.time_key])
+            if segment_info_df['BestSegmentTime'][i]:
+                best_seg.append(segment_info_df['BestSegmentTime'][i]['RealTime'])
+            else:
+                best_seg.append(np.nan)
 
         segment_info_df['BestSegment'] = best_seg
 
@@ -372,7 +399,7 @@ class LivesplitData:
 
         for i in segment_info_df.index:
             for c in cols:
-                if not pd.isna(segment_info_df[c][i]):
+                if not pd.isna(segment_info_df[c][i]) and segment_info_df[c][i] != 'NaT':
                     segment_info_df.loc[i, c] = round_time(segment_info_df[c][i])
 
         def compute_split_times(df, col_name):

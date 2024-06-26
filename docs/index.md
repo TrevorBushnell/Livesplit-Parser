@@ -24,6 +24,16 @@ from livesplit_parser import LivesplitData
 your_run = LivesplitData('path/to/your/Livesplit/file')
 ```
 
+Optionally, you can specify whether you want to pull `RealTime` or `GameTime` out of your splits by passing in the parameter `time_key` into the constructor. The default value for `time_key` is `time_key=RealTime`. As such, if you want to load in `GameTime` for your splits, your code would look like the following:
+
+```python
+from livesplit_parser import LivesplitData
+
+your_run = LivesplitData('path/to/your/Livesplit/file', time_key='GameTime')
+```
+
+Passing in anything other than `RealTime` or `GameTime` into `time_key` will result in a `ValueError`.
+
 These are the following private member variables you have access to with every `LivesplitData` object:
 
 * `LivesplitData.name -> str`: the name of the splits. This is just pulled from the file name.
@@ -49,6 +59,15 @@ These are the following private member variables you have access to with every `
   * `MedianSegmentSplitTime`: the **split times** for your median segments if your median segments were a completed run
   * `NumRunsPassed`: The number of attempts that completed that split
   * `PercentRunsPassed`: The percentage of attempts that completed that split
+* `LivesplitData.game_name`: The name of the game being speedran according to the splits
+* `LivesplitData.game_icon`: The game icon saved to the splits
+* `LivesplitData.category_name`: the name of the category being run
+* `LivesplitData.layout_path`: the layout path used for the splits
+* `LivesplitData.platform_name`: the name of the platform the speedruns were attempted on
+* `LivesplitData.platform_uses_emulator`: is `True` if the runs were done using an emulator, is `False` otherwise
+* `LivesplitData.offset`: the offset used by the splits
+* `LivesplitData.version`: the game version being run on
+* `LivesplitData.variables`: these are the category variables, which will appear assuming speedrun.com has them for the given category
 
 From here, you can use the other included functions (listed below) to get some plots about the data within your Livesplit file.
 
