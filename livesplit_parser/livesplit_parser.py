@@ -42,10 +42,10 @@ class LivesplitData:
         # Category Variables. They appear when speedrun.com has them
         self.variables = {}
 
-        for variable in variables:
-            name = variable.get('@name')
-            text = variable.get('#text')
-            self.variables[name] = text
+        # for variable in variables:
+        #     name = variable.get('@name')
+        #     text = variable.get('#text')
+        #     self.variables[name] = text
 
     def export_data(self):
         # Specify the Excel file path
@@ -91,7 +91,8 @@ class LivesplitData:
         plt.ylabel('Resets Prior to Run Completion')
         plt.xticks(rotation=90)
         if plot:
-            plt.show()
+            fig = plt.gcf()
+            return fig
 
     def chance_run_continues(self, split_name):
         df = self.split_info_df[['NumRunsPassed']]
@@ -151,7 +152,8 @@ class LivesplitData:
         plt.ylabel('Run Times (m)')
         plt.xticks(rotation=90)
         if plot:
-            plt.show()
+            fig = plt.gcf()
+            return fig
 
 
     def plot_splits_violin_plot(self, completed_runs=False, drop_na=True, plot=True):
@@ -166,7 +168,8 @@ class LivesplitData:
         plt.xticks(rotation=90)
         plt.title('Split Time Distributions')
         if plot:
-            plt.show()
+            fig = plt.gcf()
+            return fig
 
     def plot_completed_runs_lineplot(self, drop_na=True, scale='seconds', plot=True):
         data = self.__get_completed_runs_data()
@@ -205,7 +208,8 @@ class LivesplitData:
         plt.title('Run Time Distributions')
         plt.legend()
         if plot:
-            plt.show()
+            fig = plt.gcf()
+            return fig
 
     def plot_completed_runs_heatmap(self, drop_na=True, plot=True):
         data = self.__get_completed_runs_data()
@@ -233,7 +237,8 @@ class LivesplitData:
         plt.xticks(rotation=90)
         plt.ylabel('Completed Run ID')
         if plot:
-            plt.show()
+            fig = plt.gcf()
+            return fig
     
     ##################### CLASS HELPER FUNCTIONS ##############
     def __compute_finished_runs_count(self, data):
