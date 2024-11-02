@@ -127,3 +127,23 @@ Creates a heatmap of all your completed runs. The run ID is on the y-axis and th
 
 * `drop_na`: Whether to include rows that have missing data from your plot. The default value is set to `False`.
 * `plot`: Determines whether you want to see this as a standalone graph. Setting this to `True` will cause `plt.show()` to be run. Setting this to `False` will cause `plt.show()` to not be running, allowing you to add more graphs to your plot should you want to do that. The default value is set to `True`.
+
+## `RunnerData`
+
+The `RunnerData` class provides functions for analyzing data between splits files. Currently, it is the responsibility of the developer to put splits files together. 
+
+To create a `RunnerData` object, you need to create a dictionary where the keys are the usernames of each runner and the values are a `LivesplitData` object for each runner. This dictionary then gets passed into the `RunnerData` object. For example:
+
+```python
+runner1 = LivesplitData('path/to/LiveSplit/file')
+runner2 = LivesplitData('path/to/Livesplit/file')
+
+runner_dict = {'runner1username':runner1, 'runner2username':runner2}
+runner_data = RunnerData(runner_dict)
+```
+
+### `RunnerData.plot_percent_past(plot=True -> bool)`
+
+Creates a side-by-side barplot showing the percentage of runs that get past a certain split. Each color represents a specific runner. If `plot=True`, then a `matplotlib` figure will be returned by the function. Otherwise, nothing will be returned.
+
+* `plot`: Determines whether you want to see a plot or not. If `True`, returns a `matplotlib` figure object. Otherwise, this function returns nothing.
