@@ -519,3 +519,6 @@ class RunnerData:
         else:
             # TODO: Add a custom error message that gets thrown here
             print(f"ERROR: User {username} does not exist!")
+
+    def get_runner(self, username):
+        return self.runner_data[username]
