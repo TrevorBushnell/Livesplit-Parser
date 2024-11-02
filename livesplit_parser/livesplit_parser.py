@@ -486,8 +486,7 @@ class LivesplitData:
         return self.attempt_info_df[self.attempt_info_df['RunCompleted']]
 
     def __get_pb_id(self):
-<<<<<<< HEAD
-        return int(self.__get_completed_runs_data()['RealTime'].idxmin())
+        return int(self.__get_completed_runs_data()[self.time_key].idxmin())
 
 class RunnerData:
     # up to the user to create the dictionary of runners and usernames!
@@ -496,7 +495,7 @@ class RunnerData:
 
     def add_runner_data(self, username, data):
         if username not in self.runner_data.keys():
-            runner_data[username] = data
+            self.runner_data[username] = data
         else:
             # TODO: Add a custom error message that gets thrown here
             print(f"ERROR: User {username} already exists!")
@@ -515,6 +514,3 @@ class RunnerData:
         else:
             # TODO: Add a custom error message that gets thrown here
             print(f"ERROR: User {username} does not exist!")
-=======
-        return int(self.__get_completed_runs_data()[self.time_key].idxmin())
->>>>>>> main
