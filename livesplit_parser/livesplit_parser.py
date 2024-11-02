@@ -522,7 +522,40 @@ class RunnerData:
 
     def get_runner(self, username):
         return self.runner_data[username]
+      
+    def plot_percent_past(self, plot=True):
+        runner_usernames = list(self.runner_data.keys())
+        df = pd.DataFrame(columns=self.runner_data[runner_usernames[0]].split_info_df.index.to_list(), index=runner_usernames)
+        
+        for runner in runner_usernames:
+            curr_df = self.runner_data[runner].attempt_info_df
+            for col in df.columns:
+                df[col][runner] = (curr_df[(curr_df['RunCompleted'] == False) & (curr_df[col].isna())].shape[0] / self.runner_data[runner].num_attempts) * 100
+        
+        # Set up bar positions and width
+        columns = df.columns
+        x = np.arange(len(columns))  # the label locations
+        width = 0.35  # width of the bars
 
+        # Create the plot
+        fig, ax = plt.subplots(figsize=(10, 6))
+
+        # Plot each row as a separate set of bars
+        for i, row in enumerate(df.index):
+            ax.bar(x + i * width - (0.8 - width) / 2, df.loc[row], width, label=row)
+
+        # Labels and titles
+        ax.set_xlabel('Split')
+        ax.set_ylabel('Percent')
+        ax.set_title('Percentage of Runs Past A Given Split')
+        ax.set_xticks(x)
+        ax.set_xticklabels(columns, rotation=45, ha='right')  # Rotate x-axis labels
+        ax.legend()
+
+        # return the plot
+        if plot:
+            return fig
+          
     def plot_num_attempts_comp(self, plot=True):
         names = list(self.runner_data.keys())
         num_attempts = []
