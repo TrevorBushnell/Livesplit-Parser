@@ -231,7 +231,7 @@ class LivesplitData:
         if plot:
             fig = plt.gcf()
             return fig
-    
+        
     ##################### CLASS HELPER FUNCTIONS ##############
     def __compute_finished_runs_count(self, data):
         finished_count = 0
@@ -522,3 +522,34 @@ class RunnerData:
 
     def get_runner(self, username):
         return self.runner_data[username]
+
+    def plot_num_attempts_comp(self, plot=True):
+        names = list(self.runner_data.keys())
+        num_attempts = []
+        num_completed_attempts = []
+        for k in self.runner_data.keys():
+            num_attempts.append(self.runner_data[k].num_attempts)
+            num_completed_attempts.append(self.runner_data[k].num_completed_attempts)
+
+        data = pd.DataFrame({
+        'Runner': names,
+        'Total Attempts': num_attempts,
+        'Completed Attempts': num_completed_attempts
+        })
+        
+        data_melted = data.melt(id_vars="Runner", var_name="Attempt Type", value_name="Count")
+
+        # Plot using seaborn
+        fig, ax = plt.subplots()
+        sns.barplot(x="Runner", y="Count", hue="Attempt Type", data=data_melted, ax=ax)
+
+        # Set labels and title
+        ax.set_title('Comparison of Total and Completed Attempts Between Runners')
+        ax.set_xlabel('Runners')
+        ax.set_ylabel('Number of Attempts')
+        plt.xticks(rotation=45)
+
+        # Return the figure if plotting is enabled
+        if plot:
+            fig = plt.gcf()
+            return fig
