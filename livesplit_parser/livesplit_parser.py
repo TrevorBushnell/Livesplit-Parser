@@ -539,13 +539,16 @@ class RunnerData:
         
         data_melted = data.melt(id_vars="Runner", var_name="Attempt Type", value_name="Count")
 
+        # Melt the DataFrame for seaborn with attempt types as x-axis
+        data_melted = data.melt(id_vars="Runner", var_name="Attempt Type", value_name="Count")
+
         # Plot using seaborn
         fig, ax = plt.subplots()
-        sns.barplot(x="Runner", y="Count", hue="Attempt Type", data=data_melted, ax=ax)
+        sns.barplot(x="Attempt Type", y="Count", hue="Runner", data=data_melted, ax=ax)
 
         # Set labels and title
-        ax.set_title('Comparison of Total and Completed Attempts Between Runners')
-        ax.set_xlabel('Runners')
+        ax.set_title('Comparison of Total and Completed Attempts for Each Runner')
+        ax.set_xlabel('Attempt Type')
         ax.set_ylabel('Number of Attempts')
         plt.xticks(rotation=45)
 
