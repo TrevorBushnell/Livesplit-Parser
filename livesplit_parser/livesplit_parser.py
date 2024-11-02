@@ -492,3 +492,30 @@ class LivesplitData:
 
     def __get_pb_id(self):
         return int(self.__get_completed_runs_data()[self.time_key].idxmin())
+
+class RunnerData:
+    # up to the user to create the dictionary of runners and usernames!
+    def __init__(self, runner_data_dict):
+        self.runner_data = runner_data_dict
+
+    def add_runner_data(self, username, data):
+        if username not in self.runner_data.keys():
+            self.runner_data[username] = data
+        else:
+            # TODO: Add a custom error message that gets thrown here
+            print(f"ERROR: User {username} already exists!")
+            print("Not adding user")
+
+    def remove_runner_data(self, username):
+        if username in self.runner_data.keys():
+            del self.runner_data[username]
+        else:
+            # TODO: Add a custom error message that gets thrown here
+            print(f"ERROR: User {username} does not exist!")
+
+    def update_runner_data(self, username, new_data):
+        if username in self.runner_data.keys():
+            self.runner_data[username] = new_data
+        else:
+            # TODO: Add a custom error message that gets thrown here
+            print(f"ERROR: User {username} does not exist!")
