@@ -231,7 +231,7 @@ class LivesplitData:
         if plot:
             fig = plt.gcf()
             return fig
-    
+        
     ##################### CLASS HELPER FUNCTIONS ##############
     def __compute_finished_runs_count(self, data):
         finished_count = 0
@@ -522,7 +522,7 @@ class RunnerData:
 
     def get_runner(self, username):
         return self.runner_data[username]
-
+      
     def plot_percent_past(self, plot=True):
         runner_usernames = list(self.runner_data.keys())
         df = pd.DataFrame(columns=self.runner_data[runner_usernames[0]].split_info_df.index.to_list(), index=runner_usernames)
@@ -555,4 +555,37 @@ class RunnerData:
         # return the plot
         if plot:
             return fig
-    
+          
+    def plot_num_attempts_comp(self, plot=True):
+        names = list(self.runner_data.keys())
+        num_attempts = []
+        num_completed_attempts = []
+        for k in self.runner_data.keys():
+            num_attempts.append(self.runner_data[k].num_attempts)
+            num_completed_attempts.append(self.runner_data[k].num_completed_attempts)
+
+        data = pd.DataFrame({
+        'Runner': names,
+        'Total Attempts': num_attempts,
+        'Completed Attempts': num_completed_attempts
+        })
+        
+        data_melted = data.melt(id_vars="Runner", var_name="Attempt Type", value_name="Count")
+
+        # Melt the DataFrame for seaborn with attempt types as x-axis
+        data_melted = data.melt(id_vars="Runner", var_name="Attempt Type", value_name="Count")
+
+        # Plot using seaborn
+        fig, ax = plt.subplots()
+        sns.barplot(x="Attempt Type", y="Count", hue="Runner", data=data_melted, ax=ax)
+
+        # Set labels and title
+        ax.set_title('Comparison of Total and Completed Attempts for Each Runner')
+        ax.set_xlabel('Attempt Type')
+        ax.set_ylabel('Number of Attempts')
+        plt.xticks(rotation=45)
+
+        # Return the figure if plotting is enabled
+        if plot:
+            fig = plt.gcf()
+            return fig
